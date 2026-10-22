@@ -132,8 +132,12 @@ function loadPdfCandidates(json: Record<string, unknown>): string[] {
 }
 
 function pdfProxyUrl(candidate: string): string {
-  const resolved = buildMediaUrl(candidate)!;
-  return `/api/pdf?url=${encodeURIComponent(resolved)}`;
+  const resolved = new URL(candidate.replace(/\\\//g, "/"), `${CRM_BASE}/`);
+  if (resolved.hostname === new URL(CRM_BASE).hostname && !resolved.search) {
+    const path = resolved.pathname.replace(/^\/+/, "");
+    return `/api/pdf?path=${encodeURIComponent(path)}`;
+  }
+  return `/api/pdf?url=${encodeURIComponent(resolved.toString())}`;
 }
 
 async function loadCourseContent(courseId: string): Promise<{
