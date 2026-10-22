@@ -56,8 +56,129 @@ async function crmQuery(payload: object): Promise<unknown> {
 
 function buildMediaUrl(path: string | undefined | null): string | null {
   if (!path) return null;
-  if (path.startsWith("http")) return path;
-  return `${CRM_BASE}/${path.replace(/^\//, "")}`;
+  const normalized = path.replace(/\\\//g, "/").trim();
+  if (/^https?:\/\//i.test(normalized)) return normalized;
+  return `${CRM_BASE}/${normalized.replace(/^\/+/, "")}`;
+}
+
+function unwrapJson(value: unknown): unknown {
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if ((trimmed.startsWith("{") && trimmed.endsWith("}")) || (trimmed.startsWith("[") && trimmed.endsWith("]"))) {
+      try {
+        return unwrapJson(JSON.parse(trimmed));
+      } catch {
+        return value;
+      }
+    }
+    return value;
+  }
+  if (Array.isArray(value)) return value.map(unwrapJson);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, unwrapJson(item)]));
+  }
+  return value;
+}
+
+function recordJson(value: unknown): Record<string, unknown> {
+  const unwrapped = unwrapJson(value);
+  return unwrapped && typeof unwrapped === "object" && !Array.isArray(unwrapped)
+    ? unwrapped as Record<string, unknown>
+    : {};
+}
+
+function loadPdfCandidates(json: Record<string, unknown>): string[] {
+  const roots = [
+    recordJson(json._de)._no,
+    json._no,
+    json._no_ur,
+    json.notes,
+    json._pd,
+    json._pd_ur,
+    json.pdf,
+    json.pdf_url,
+    json._pdf_url,
+    json._no_url,
+    json.note_url,
+    json.document_url,
+    json.file_url,
+    json._no_path,
+    json._no_file,
+    json._no_src,
+    json._at,
+    json.attachment,
+  ];
+  const candidates: string[] = [];
+  const visit = (value: unknown): void => {
+    const unwrapped = unwrapJson(value);
+    if (Array.isArray(unwrapped)) {
+      for (const item of unwrapped) visit(item);
+      return;
+    }
+    if (unwrapped && typeof unwrapped === "object") {
+      for (const [key, item] of Object.entries(unwrapped)) {
+        if (/^(url|uri|path|file|src|href|link|pdf_url|file_url|document_url|note_url|_url|_no_url)$/i.test(key)) visit(item);
+      }
+      return;
+    }
+    if (typeof unwrapped !== "string") return;
+    for (const part of unwrapped.split(",")) {
+      const candidate = part.trim().replace(/\\\//g, "/");
+      if (isPdfCandidate(candidate)) candidates.push(candidate);
+    }
+  };
+  for (const root of roots) visit(root);
+  return [...new Set(candidates)];
+}
+
+function pdfProxyUrl(candidate: string): string {
+  const resolved = buildMediaUrl(candidate)!;
+  return `/api/pdf?url=${encodeURIComponent(resolved)}`;
+}
+
+async function loadCourseContent(courseId: string): Promise<{
+  subjectData: unknown;
+  contentData: unknown;
+}> {
+  const batches = await tncProtectedRequest("fe_co", { limit: 1000 });
+  const batch = Array.isArray(batches)
+    ? (batches as Record<string, unknown>[]).find((row) => String(row.row_id ?? "") === courseId)
+    : undefined;
+  const batchJson = recordJson(batch?.json);
+  const subjectIds = Array.isArray(batchJson._su) ? [...new Set(batchJson._su.filter((id): id is string => typeof id === "string" && Boolean(id)))] : [];
+  const chapterIds = Array.isArray(batchJson._ch) ? [...new Set(batchJson._ch.filter((id): id is string => typeof id === "string" && Boolean(id)))] : [];
+  const parentCourseIds = Array.isArray(batchJson._co) ? batchJson._co.filter((id): id is string => typeof id === "string" && Boolean(id)) : [];
+  const courseRefId = String(batch?.course_id ?? batch?.wc_refid ?? batchJson.course_id ?? batchJson.wc_refid ?? parentCourseIds[0] ?? courseId);
+
+  let subjectData: unknown = [];
+  if (subjectIds.length) {
+    subjectData = await tncProtectedRequest("fe", { json: "*" }, {
+      sch: "t_su", cond: { "(row_id)": subjectIds }, limit: 1000,
+    });
+  }
+  if (!Array.isArray(subjectData) || subjectData.length === 0) {
+    subjectData = await tncProtectedRequest("fe", { json: "*" }, {
+      sch: "t_su", cond: { co_refid: courseRefId }, limit: 1000,
+    });
+  }
+
+  const linkedSubjectIds = Array.isArray(subjectData)
+    ? [...new Set((subjectData as Record<string, unknown>[]).map((row) => String(row.row_id ?? "").trim()).filter(Boolean))]
+    : [];
+  const queries: Promise<unknown>[] = [];
+  if (chapterIds.length) {
+    queries.push(tncProtectedRequest("fe", { json: "*" }, {
+      sch: "t_ch", cond: { "(row_id)": chapterIds }, limit: 1000,
+    }));
+  }
+  if (linkedSubjectIds.length) {
+    queries.push(tncProtectedRequest("fe", { json: "*" }, {
+      sch: "t_ch", cond: { "(su_refid)": linkedSubjectIds }, limit: 1000,
+    }));
+  }
+  const contentRows = (await Promise.all(queries)).flatMap((data) => Array.isArray(data) ? data as Record<string, unknown>[] : []);
+  const contentData = [...new Map(contentRows.map((row) => [String(row.row_id ?? row.id ?? JSON.stringify(row)), row])).values()];
+  return { subjectData, contentData };
 }
 
 function courseDescriptionText(value: unknown): string {
@@ -118,7 +239,7 @@ function deriveSubject(title: string): { rowId: string; name: string } {
   return { rowId: "uncategorized", name: "Uncategorized" };
 }
 
-function isYouTubeUrl(url: unknown): url is string {
+function isYouTubeUrl(url: unknown): boolean {
   if (typeof url !== "string" || !url.startsWith("http")) return false;
   return url.includes("youtube.com") || url.includes("youtu.be");
 }
@@ -179,13 +300,12 @@ function convertFirebaseStorageUrl(url: string): string {
 }
 
 function parseChapter(row: Record<string, unknown>) {
-  const json = typeof row.json === "string" ? JSON.parse(row.json) as Record<string, unknown> : (row.json as Record<string, unknown>) ?? {};
+  const json = recordJson(row.json);
   const title = (json._na ?? "Untitled") as string;
   const derivedSubject = deriveSubject(title);
   const vi = (json._vi as Record<string, unknown>) ?? {};
-  const de = (json._de as Record<string, unknown>) ?? {};
+  const de = recordJson(json._de);
   const deVi = (de._vi as Record<string, unknown>) ?? {};
-  const deNo = (de._no as Record<string, unknown>) ?? {};
 
   // Firebase ID for secured content (UUID style) - PRIORITY 1
   // This uses /api/firebase-stream/:fsId which supports Range requests for seeking
@@ -235,40 +355,7 @@ function parseChapter(row: Record<string, unknown>) {
   }
 
   // PDF handling — only trust real PDF-looking resources.
-  const pdfCandidates = [
-    deNo.url,
-    deNo.uri,
-    deNo._no_url,
-    deNo.pdf_url,
-    deNo._url,
-    deNo.link,
-    deNo.file_url,
-    deNo.document_url,
-    deNo.note_url,
-    deNo.path,
-    deNo.file,
-    deNo.src,
-    deNo.href,
-    // Also check json._no directly (not just de._no)
-    typeof json._no === "object" && json._no !== null ? (json._no as Record<string, unknown>).url : null,
-    typeof json._no === "object" && json._no !== null ? (json._no as Record<string, unknown>).uri : null,
-    typeof json._no === "object" && json._no !== null ? (json._no as Record<string, unknown>).path : null,
-    typeof json._no === "object" && json._no !== null ? (json._no as Record<string, unknown>).file : null,
-    typeof json._no === "object" && json._no !== null ? (json._no as Record<string, unknown>).src : null,
-    typeof json._no === "object" && json._no !== null ? (json._no as Record<string, unknown>).href : null,
-    typeof json._no === "object" && json._no !== null ? (json._no as Record<string, unknown>).file_url : null,
-    typeof json._no === "object" && json._no !== null ? (json._no as Record<string, unknown>).document_url : null,
-    json.pdf_url,
-    json._pdf_url,
-    json._no_url,
-    json.note_url,
-    json.document_url,
-    json.file_url,
-    json._no_path,
-    json._no_file,
-    json._no_src,
-    typeof json._no === "string" ? json._no : null,
-  ].filter((value): value is string => typeof value === "string" && isPdfCandidate(value));
+  const pdfCandidates = loadPdfCandidates(json);
 
   const pdfCandidate = pdfCandidates[0] ?? null;
   const rawPdfPath = (pdfCandidate ?? "").replace(/^\//, "");
@@ -276,30 +363,22 @@ function parseChapter(row: Record<string, unknown>) {
   let pdfUrl: string | null = null;
 
   if (pdfCandidate && isCrmHostedPdf) {
-    pdfUrl = `/api/pdf?path=${encodeURIComponent(rawPdfPath)}`;
+    pdfUrl = pdfProxyUrl(pdfCandidate);
     if (!videoUrl && contentType !== "firebase") {
       contentType = "pdf";
     }
   }
 
-  if (!videoUrl && !pdfUrl && pdfCandidate && pdfCandidate.startsWith("http")) {
-    pdfUrl = `/api/pdf?url=${encodeURIComponent(pdfCandidate)}`;
+  if (!videoUrl && !pdfUrl && pdfCandidate && /^https?:\/\//i.test(pdfCandidate)) {
+    pdfUrl = pdfProxyUrl(pdfCandidate);
     if (contentType === "none") contentType = "pdf";
   }
 
   // FALLBACK: If we have a PDF candidate but it's not a recognized format,
   // try treating it as a CRM path anyway (relative path)
-  if (!videoUrl && !pdfUrl && pdfCandidate && !pdfCandidate.startsWith("http")) {
-    // Try as CRM path even without "uploads/" prefix
-    pdfUrl = `/api/pdf?path=${encodeURIComponent(rawPdfPath)}`;
+  if (!videoUrl && !pdfUrl && pdfCandidate && !/^https?:\/\//i.test(pdfCandidate)) {
+    pdfUrl = pdfProxyUrl(pdfCandidate);
     if (contentType === "none") contentType = "pdf";
-  }
-
-  // Keep PDF-only entries PDF-first, but retain Firebase video classification
-  // when a CRM row contains both a video ID and a PDF.
-  if (pdfUrl) {
-    videoUrl = null;
-    if (!hasFirebaseId) contentType = "pdf";
   }
 
   // AGGRESSIVE: If no videoUrl but we have a pdfCandidate (even if not valid URL), treat as PDF
@@ -325,6 +404,7 @@ function parseChapter(row: Record<string, unknown>) {
     description: "",
     videoUrl,
     pdfUrl,
+    pdfUrls: pdfCandidates.map(pdfProxyUrl),
     firebaseId: hasFirebaseId ? firebaseId : null,
     contentType,
     type: finalType,
@@ -440,28 +520,12 @@ router.get("/courses", async (_req: Request, res: Response): Promise<void> => {
 router.get("/subjects", async (req: Request, res: Response): Promise<void> => {
   try {
     const { courseId } = req.query;
-    const batches = await tncProtectedRequest("fe_co");
-    const batch = Array.isArray(batches)
-      ? (batches as Record<string, unknown>[]).find((row) => row.row_id === courseId)
-      : undefined;
-    const batchJson = typeof batch?.json === "string"
-      ? JSON.parse(batch.json) as Record<string, unknown>
-      : (batch?.json as Record<string, unknown>) ?? {};
-    const subjectIds = Array.isArray(batchJson._su) ? [...new Set(batchJson._su as string[])] : [];
-    const chapterIds = Array.isArray(batchJson._ch) ? [...new Set(batchJson._ch as string[])] : [];
-    const parentCourseIds = Array.isArray(batchJson._co) ? batchJson._co as string[] : [];
-    const [contentData, subjectData] = await Promise.all([
-      tncProtectedRequest("fe", { json: "*" }, { sch: "t_ch", cond: { "(row_id)": chapterIds } }),
-      tncProtectedRequest("fe", { json: "*" }, {
-        sch: "t_su",
-        cond: subjectIds.length ? { "(row_id)": subjectIds } : { co_refid: parentCourseIds[0] ?? "" },
-      }),
-    ]);
+    const { subjectData, contentData } = await loadCourseContent(String(courseId ?? ""));
     const subjects: Array<Record<string, unknown> & { rowId: string; name: string; videoCount: number; pdfCount: number; totalCount: number }> = [];
     const subjectById = new Map<string, (typeof subjects)[number]>();
     if (Array.isArray(subjectData)) {
       for (const row of subjectData as Record<string, unknown>[]) {
-        const json = typeof row.json === "string" ? JSON.parse(row.json) as Record<string, unknown> : (row.json as Record<string, unknown>) ?? {};
+        const json = recordJson(row.json);
         const rowId = String(row.row_id ?? "").trim();
         if (!rowId) continue;
         const subject = {
@@ -499,9 +563,10 @@ router.get("/subjects", async (req: Request, res: Response): Promise<void> => {
           subjectById.set(subject.rowId, subject);
         }
         subject.totalCount += 1;
-        const hasPdf = Boolean(parsed.pdfUrl) || parsed.contentType === "pdf";
+        const pdfCount = Array.isArray(parsed.pdfUrls) ? parsed.pdfUrls.length : 0;
+        const hasPdf = pdfCount > 0 || Boolean(parsed.pdfUrl) || parsed.contentType === "pdf";
         const hasVideo = parsed.contentType === "youtube" || parsed.contentType === "firebase" || Boolean(parsed.videoUrl);
-        if (hasPdf) subject.pdfCount += 1;
+        subject.pdfCount += pdfCount || Number(hasPdf);
         if (hasVideo || !hasPdf) subject.videoCount += 1;
       }
     }
@@ -619,17 +684,9 @@ router.get("/media-proxy", async (req: Request, res: Response): Promise<void> =>
 router.get("/notes", async (req: Request, res: Response): Promise<void> => {
   try {
     const { courseId, limit: limitParam } = req.query;
-    const cond: Record<string, unknown> = {};
-    if (typeof courseId === "string") {
-      const batches = await tncProtectedRequest("fe_co");
-      const batch = Array.isArray(batches)
-        ? (batches as Record<string, unknown>[]).find((row) => row.row_id === courseId)
-        : undefined;
-      const json = typeof batch?.json === "string" ? JSON.parse(batch.json) as Record<string, unknown> : (batch?.json as Record<string, unknown>) ?? {};
-      cond["(row_id)"] = Array.isArray(json._ch) ? json._ch : [];
-    }
-
-    const data = await tncProtectedRequest("fe", { json: "*" }, { sch: "t_ch", cond });
+    const data = typeof courseId === "string"
+      ? (await loadCourseContent(courseId)).contentData
+      : await tncProtectedRequest("fe", { json: "*" }, { sch: "t_ch", cond: {}, limit: 1000 });
 
     if (!Array.isArray(data)) {
       res.json([]);
@@ -663,18 +720,10 @@ router.get("/notes", async (req: Request, res: Response): Promise<void> => {
 router.get("/sessions", async (req: Request, res: Response): Promise<void> => {
   try {
     const { courseId, subjectId, limit: limitParam, type, sort, page: pageParam, search } = req.query;
-    const cond: Record<string, unknown> = {};
-    if (typeof courseId === "string") {
-      const batches = await tncProtectedRequest("fe_co");
-      const batch = Array.isArray(batches)
-        ? (batches as Record<string, unknown>[]).find((row) => row.row_id === courseId)
-        : undefined;
-      const json = typeof batch?.json === "string" ? JSON.parse(batch.json) as Record<string, unknown> : (batch?.json as Record<string, unknown>) ?? {};
-      cond["(row_id)"] = Array.isArray(json._ch) ? json._ch : [];
-    }
+    const data = typeof courseId === "string"
+      ? (await loadCourseContent(courseId)).contentData
+      : await tncProtectedRequest("fe", { json: "*" }, { sch: "t_ch", cond: {}, limit: 1000 });
     const requestedSubjectId = typeof subjectId === "string" ? subjectId.trim() : "";
-
-    const data = await tncProtectedRequest("fe", { json: "*" }, { sch: "t_ch", cond });
 
     if (!Array.isArray(data)) {
       res.json(courseId ? [] : { sessions: [], total: 0 });

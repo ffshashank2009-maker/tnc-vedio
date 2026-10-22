@@ -21,6 +21,7 @@ interface SubjectSession {
   title: string;
   videoUrl?: string | null;
   pdfUrl?: string | null;
+  pdfUrls?: string[];
   contentType: string;
   isPaid: boolean;
   serialNo: string;
@@ -161,6 +162,7 @@ export default function SubjectDetailPage() {
               const locked = session.isPaid && !isCourseUnlocked;
               const href = pdf && !video ? `/pdf/${session.rowId}` : `/watch/${session.rowId}`;
               const typeLabel = pdf && !video ? "PDF" : session.contentType === "firebase" ? "SECURED VIDEO" : video ? "VIDEO" : "CONTENT";
+              const attachmentUrls = (session.pdfUrls ?? []).slice(video ? 0 : 1);
               return locked ? (
                 <div key={session.rowId} className="flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 p-4 opacity-70">
                   <Lock size={18} className="shrink-0 text-gray-400" />
@@ -168,11 +170,22 @@ export default function SubjectDetailPage() {
                   <span className="text-[10px] font-semibold text-gray-400">LOCKED</span>
                 </div>
               ) : (
-                <Link key={session.rowId} href={href} className="group flex items-center gap-3 rounded-xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:border-blue-200 hover:shadow-md">
-                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${pdf && !video ? "bg-red-50 text-red-500" : "bg-blue-50 text-blue-600"}`}>{pdf && !video ? <FileText size={19} /> : <PlayCircle size={19} />}</div>
-                  <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-gray-900">{index + 1}. {session.title}</p><p className="text-xs text-gray-400">{typeLabel} · {session.isPaid ? "Premium" : "Free"}</p></div>
-                  <ChevronRight size={17} className="shrink-0 text-gray-300 transition-colors group-hover:text-blue-600" />
-                </Link>
+                <div key={session.rowId}>
+                  <Link href={href} className="group flex items-center gap-3 rounded-xl border border-gray-100 bg-white p-4 shadow-sm transition-all hover:border-blue-200 hover:shadow-md">
+                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${pdf && !video ? "bg-red-50 text-red-500" : "bg-blue-50 text-blue-600"}`}>{pdf && !video ? <FileText size={19} /> : <PlayCircle size={19} />}</div>
+                    <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-gray-900">{index + 1}. {session.title}</p><p className="text-xs text-gray-400">{typeLabel} · {session.isPaid ? "Premium" : "Free"}</p></div>
+                    <ChevronRight size={17} className="shrink-0 text-gray-300 transition-colors group-hover:text-blue-600" />
+                  </Link>
+                  {attachmentUrls.length > 0 && (
+                    <div className="flex flex-wrap gap-x-4 gap-y-2 px-4 pt-2">
+                      {attachmentUrls.map((url, pdfIndex) => (
+                        <a key={`${session.rowId}-pdf-${pdfIndex + (video ? 1 : 2)}`} href={url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:underline">
+                          <FileText size={13} /> {session.title} · PDF {pdfIndex + (video ? 1 : 2)}
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>
