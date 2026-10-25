@@ -36,7 +36,7 @@ function isVideo(session: SubjectSession) {
 }
 
 function isPdf(session: SubjectSession) {
-  return !isVideo(session) && (session.contentType === "pdf" || Boolean(session.pdfUrl) || Boolean(session.pdfUrls?.length));
+  return session.contentType === "pdf" || Boolean(session.pdfUrl) || Boolean(session.pdfUrls?.length);
 }
 
 export default function SubjectDetailPage() {
@@ -157,7 +157,7 @@ export default function SubjectDetailPage() {
         ) : (
           <div className="space-y-2">
             {visibleSessions.map((session, index) => {
-              const video = isVideo(session);
+              const video = filter !== "pdf" && isVideo(session);
               const pdf = isPdf(session);
               const locked = session.isPaid && !isCourseUnlocked;
               const href = pdf && !video ? `/pdf/${session.rowId}` : `/watch/${session.rowId}`;
