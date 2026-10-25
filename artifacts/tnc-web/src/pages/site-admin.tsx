@@ -81,6 +81,32 @@ function UserActivityPanel({ activity }: { activity: SiteUserActivity }) {
   );
 }
 
+function UserDetailsPanel({ user }: { user: AdminAccessUser }) {
+  const details: Array<[string, string]> = [
+    ["Google name", user.displayName || "—"],
+    ["Email", user.email],
+    ["User ID", user.userId],
+    ["Role", user.adminRole ?? "User"],
+    ["Access status", user.status],
+    ["Requested", new Date(user.requestedAt).toLocaleString()],
+    ["Last reviewed", user.reviewedAt ? new Date(user.reviewedAt).toLocaleString() : "Never"],
+    ["Reviewed by", user.reviewedBy ?? "—"],
+    ["Approval expires", user.approvedUntil ? new Date(user.approvedUntil).toLocaleString() : user.status === "approved" ? "Never" : "—"],
+    ["Denial reason", user.denialReason ?? "—"],
+    ["Block reason", user.blockedReason ?? "—"],
+    ["Block expires", user.blockedUntil ? new Date(user.blockedUntil).toLocaleString() : user.status === "blocked" ? "Permanent" : "—"],
+  ];
+
+  return (
+    <section className="mt-4 border-t border-slate-100 pt-4" aria-label={`Details for ${user.email}`}>
+      <h4 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">Account details</h4>
+      <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
+        {details.map(([label, value]) => <div key={label} className="min-w-0"><dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{label}</dt><dd className="mt-0.5 break-words text-sm text-slate-800">{value}</dd></div>)}
+      </dl>
+    </section>
+  );
+}
+
 export default function SiteAdminPage() {
   const { access, signOut } = useSiteAuth();
   const [filter, setFilter] = useState<Filter>("pending");
@@ -101,6 +127,8 @@ export default function SiteAdminPage() {
   const [activityUserId, setActivityUserId] = useState<string | null>(null);
   const [activity, setActivity] = useState<SiteUserActivity | null>(null);
   const [activityLoading, setActivityLoading] = useState(false);
+  const [detailsUserId, setDetailsUserId] = useState<string | null>(null);
+  const [zoomedProfile, setZoomedProfile] = useState<{ url: string; name: string } | null>(null);
   const [siteAdmins, setSiteAdmins] = useState<SiteAdminAccount[]>([]);
   const [adminEmail, setAdminEmail] = useState("");
   const [adminRoleLoading, setAdminRoleLoading] = useState(false);
@@ -214,6 +242,15 @@ export default function SiteAdminPage() {
     }
   }
 
+  useEffect(() => {
+    if (!zoomedProfile) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setZoomedProfile(null);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [zoomedProfile]);
+
   if (!access?.isAdmin) {
     return <main className="min-h-screen bg-slate-950 px-4 py-20 text-center text-white"><h1 className="text-xl font-black">Admin access required</h1><p className="mt-2 text-sm text-white/70">Sign in with the authorized Google account to manage site access.</p></main>;
   }
@@ -268,10 +305,11 @@ export default function SiteAdminPage() {
           <div className="mt-5 divide-y divide-slate-200 border-y border-slate-200 bg-white">
             {visibleUsers.map((user) => <article key={user.userId} className="px-4 py-5 sm:px-6">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
-                {user.avatarUrl ? <img src={user.avatarUrl} alt={`${user.displayName || user.email} profile`} referrerPolicy="no-referrer" className="h-12 w-12 shrink-0 rounded-full object-cover" loading="lazy" /> : <div aria-hidden="true" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-100 font-bold text-emerald-900">{(user.displayName || user.email).slice(0, 1).toUpperCase()}</div>}
-                <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="break-all font-bold">{user.email}</h3><span className={`px-2 py-1 text-xs font-bold uppercase ${user.status === "approved" ? "bg-emerald-100 text-emerald-800" : user.status === "denied" || user.status === "blocked" ? "bg-red-100 text-red-800" : "bg-amber-100 text-amber-900"}`}>{user.status}</span>{user.adminRole && <span className="bg-blue-100 px-2 py-1 text-xs font-bold uppercase text-blue-800">{user.adminRole.replace("_", " ")}</span>}</div><p className="mt-1 text-xs text-slate-500">Requested {new Date(user.requestedAt).toLocaleString()}</p>{user.status === "approved" && <p className="mt-2 text-xs text-emerald-800">{user.approvedUntil ? `Approved until ${new Date(user.approvedUntil).toLocaleString()}` : "Permanent approval"}</p>}{user.denialReason && <p className="mt-2 text-sm text-red-800">Denied: {user.denialReason}</p>}{user.blockedReason && <p className="mt-2 text-sm text-red-800">Block reason: {user.blockedReason}{user.blockedUntil ? ` · Until ${new Date(user.blockedUntil).toLocaleString()}` : " · Permanent"}</p>}</div>
-                <div className="flex flex-wrap gap-2">{access.adminRole === "super_admin" && <button disabled={!!busyId} onClick={() => void toggleActivity(user.userId)} className="inline-flex items-center gap-1.5 border border-slate-300 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50"><BookOpen size={14} /> Activity</button>}<button disabled={!!busyId} onClick={() => { setSelectedId(selectedId === user.userId && selectedAction === "approve" ? null : user.userId); setSelectedAction(selectedId === user.userId && selectedAction === "approve" ? null : "approve"); setReason(""); }} className="inline-flex items-center gap-1.5 bg-emerald-800 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-900 disabled:opacity-50"><Check size={14} /> {user.status === "approved" ? "Set approval period" : "Approve"}</button>{user.status === "approved" && <button disabled={!!busyId} onClick={() => void updateUser(user.userId, "unapprove")} className="inline-flex items-center gap-1.5 border border-red-200 px-3 py-2 text-xs font-bold text-red-800 hover:bg-red-50 disabled:opacity-50"><X size={14} /> Unapprove</button>}{user.status === "pending" && <button disabled={!!busyId} onClick={() => void updateUser(user.userId, "deny")} className="inline-flex items-center gap-1.5 border border-red-200 px-3 py-2 text-xs font-bold text-red-800 hover:bg-red-50 disabled:opacity-50"><X size={14} /> Deny</button>}{user.status === "blocked" ? <button disabled={!!busyId} onClick={() => void updateUser(user.userId, "unblock")} className="inline-flex items-center gap-1.5 border border-emerald-200 px-3 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-50 disabled:opacity-50"><ShieldOff size={14} /> Unblock</button> : <button disabled={!!busyId} onClick={() => { const opening = selectedId !== user.userId || selectedAction !== "block"; setSelectedId(opening ? user.userId : null); setSelectedAction(opening ? "block" : null); setReason(""); }} className="inline-flex items-center gap-1.5 border border-slate-300 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50"><Clock3 size={14} /> Block</button>}{access.adminRole === "super_admin" && user.adminRole !== "super_admin" && <button disabled={!!busyId} onClick={() => void setUserAdmin(user.email, user.adminRole !== "admin")} className="inline-flex items-center gap-1.5 border border-blue-200 px-3 py-2 text-xs font-bold text-blue-800 hover:bg-blue-50 disabled:opacity-50">{user.adminRole === "admin" ? "Remove admin" : "Make admin"}</button>}</div>
+                {user.avatarUrl ? <button type="button" onClick={() => setZoomedProfile({ url: user.avatarUrl!, name: user.displayName || user.email })} aria-label={`Zoom ${user.displayName || user.email}'s profile picture`} className="h-12 w-12 shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"><img src={user.avatarUrl} alt={`${user.displayName || user.email} profile`} referrerPolicy="no-referrer" className="h-full w-full rounded-full object-cover" loading="lazy" /></button> : <div aria-hidden="true" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-100 font-bold text-emerald-900">{(user.displayName || user.email).slice(0, 1).toUpperCase()}</div>}
+                <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="break-all font-bold">{user.displayName || user.email}</h3><span className="break-all text-sm text-slate-600">{user.displayName ? user.email : ""}</span><span className={`px-2 py-1 text-xs font-bold uppercase ${user.status === "approved" ? "bg-emerald-100 text-emerald-800" : user.status === "denied" || user.status === "blocked" ? "bg-red-100 text-red-800" : "bg-amber-100 text-amber-900"}`}>{user.status}</span>{user.adminRole && <span className="bg-blue-100 px-2 py-1 text-xs font-bold uppercase text-blue-800">{user.adminRole.replace("_", " ")}</span>}</div><p className="mt-1 text-xs text-slate-500">Requested {new Date(user.requestedAt).toLocaleString()}</p>{user.status === "approved" && <p className="mt-2 text-xs text-emerald-800">{user.approvedUntil ? `Approved until ${new Date(user.approvedUntil).toLocaleString()}` : "Permanent approval"}</p>}{user.denialReason && <p className="mt-2 text-sm text-red-800">Denied: {user.denialReason}</p>}{user.blockedReason && <p className="mt-2 text-sm text-red-800">Block reason: {user.blockedReason}{user.blockedUntil ? ` · Until ${new Date(user.blockedUntil).toLocaleString()}` : " · Permanent"}</p>}</div>
+                <div className="flex flex-wrap gap-2"><button disabled={!!busyId} onClick={() => setDetailsUserId(detailsUserId === user.userId ? null : user.userId)} className="border border-slate-300 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50">{detailsUserId === user.userId ? "Hide details" : "Details"}</button>{access.adminRole === "super_admin" && <button disabled={!!busyId} onClick={() => void toggleActivity(user.userId)} className="inline-flex items-center gap-1.5 border border-slate-300 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50"><BookOpen size={14} /> Activity</button>}<button disabled={!!busyId} onClick={() => { setSelectedId(selectedId === user.userId && selectedAction === "approve" ? null : user.userId); setSelectedAction(selectedId === user.userId && selectedAction === "approve" ? null : "approve"); setReason(""); }} className="inline-flex items-center gap-1.5 bg-emerald-800 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-900 disabled:opacity-50"><Check size={14} /> {user.status === "approved" ? "Set approval period" : "Approve"}</button>{user.status === "approved" && <button disabled={!!busyId} onClick={() => void updateUser(user.userId, "unapprove")} className="inline-flex items-center gap-1.5 border border-red-200 px-3 py-2 text-xs font-bold text-red-800 hover:bg-red-50 disabled:opacity-50"><X size={14} /> Unapprove</button>}{user.status === "pending" && <button disabled={!!busyId} onClick={() => void updateUser(user.userId, "deny")} className="inline-flex items-center gap-1.5 border border-red-200 px-3 py-2 text-xs font-bold text-red-800 hover:bg-red-50 disabled:opacity-50"><X size={14} /> Deny</button>}{user.status === "blocked" ? <button disabled={!!busyId} onClick={() => void updateUser(user.userId, "unblock")} className="inline-flex items-center gap-1.5 border border-emerald-200 px-3 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-50 disabled:opacity-50"><ShieldOff size={14} /> Unblock</button> : <button disabled={!!busyId} onClick={() => { const opening = selectedId !== user.userId || selectedAction !== "block"; setSelectedId(opening ? user.userId : null); setSelectedAction(opening ? "block" : null); setReason(""); }} className="inline-flex items-center gap-1.5 border border-slate-300 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50"><Clock3 size={14} /> Block</button>}{access.adminRole === "super_admin" && user.adminRole !== "super_admin" && <button disabled={!!busyId} onClick={() => void setUserAdmin(user.email, user.adminRole !== "admin")} className="inline-flex items-center gap-1.5 border border-blue-200 px-3 py-2 text-xs font-bold text-blue-800 hover:bg-blue-50 disabled:opacity-50">{user.adminRole === "admin" ? "Remove admin" : "Make admin"}</button>}</div>
               </div>
+              {detailsUserId === user.userId && <UserDetailsPanel user={user} />}
               {activityUserId === user.userId && activityLoading && <p className="mt-4 text-sm text-slate-500">Loading saved activity...</p>}
               {activityUserId === user.userId && activity && <UserActivityPanel activity={activity} />}
               {selectedId === user.userId && selectedAction && <form onSubmit={(event) => { event.preventDefault(); void updateUser(user.userId, selectedAction); }} className="mt-4 grid gap-3 border-t border-slate-100 pt-4 sm:grid-cols-[minmax(0,1fr)_10rem_auto_auto] sm:items-end">
@@ -284,6 +322,13 @@ export default function SiteAdminPage() {
           </div>
         )}
       </div>
+      {zoomedProfile && <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/80 p-4" role="dialog" aria-modal="true" aria-labelledby="profile-zoom-title" onClick={() => setZoomedProfile(null)}>
+        <div className="relative max-h-[90vh] max-w-[min(92vw,42rem)]" onClick={(event) => event.stopPropagation()}>
+          <button type="button" onClick={() => setZoomedProfile(null)} aria-label="Close enlarged profile picture" className="absolute -right-3 -top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-800 shadow-lg hover:bg-slate-100"><X size={19} /></button>
+          <img src={zoomedProfile.url} alt={`${zoomedProfile.name} profile picture`} referrerPolicy="no-referrer" className="max-h-[82vh] w-auto max-w-[92vw] rounded-xl bg-white object-contain shadow-2xl" />
+          <p id="profile-zoom-title" className="mt-3 text-center text-sm font-semibold text-white">{zoomedProfile.name}</p>
+        </div>
+      </div>}
     </main>
   );
 }
