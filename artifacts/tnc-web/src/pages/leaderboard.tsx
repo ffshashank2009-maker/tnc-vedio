@@ -40,7 +40,7 @@ export default function LeaderboardPage() {
     const loadLeaderboard = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`${BASE}/api/bot/study/leaderboard?limit=100`, { cache: "no-store" });
+        const response = await fetch(`${BASE}/api/bot/study/leaderboard?limit=100&googleOnly=true`, { cache: "no-store" });
         if (!response.ok) throw new Error("Failed to load leaderboard");
         const data: unknown = await response.json();
         if (!Array.isArray(data)) throw new Error("Invalid leaderboard response");

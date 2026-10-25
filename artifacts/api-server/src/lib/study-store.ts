@@ -56,17 +56,21 @@ export async function recordWebsiteStudyHeartbeat(input: WebsiteStudyHeartbeat):
   });
 }
 
-export async function getLeaderboard(limit = 20): Promise<StudySessionSummary[]> {
+export async function getLeaderboard(limit = 20, options: { googleOnly?: boolean } = {}): Promise<StudySessionSummary[]> {
   const maxRows = Math.min(limit, 100);
+  const queryLimit = options.googleOnly ? 1000 : maxRows;
   try {
-    const rows = await supabaseRequest<Array<{
+    const queriedRows = await supabaseRequest<Array<{
       participant_id: number | string;
       first_name: string;
       username: string | null;
       avatar_url: string | null;
       seconds: number;
       sessions: number;
-    }>>(`study_leaderboard?select=participant_id,first_name,username,avatar_url,seconds,sessions&order=seconds.desc&limit=${maxRows}`);
+    }>>(`study_leaderboard?select=participant_id,first_name,username,avatar_url,seconds,sessions&order=seconds.desc&limit=${queryLimit}`);
+    const rows = options.googleOnly
+      ? queriedRows.filter((row) => String(row.participant_id).startsWith("web_google_")).slice(0, maxRows)
+      : queriedRows;
     return rows.map((row) => ({
       telegramId: String(row.participant_id),
       firstName: row.first_name,
@@ -76,6 +80,7 @@ export async function getLeaderboard(limit = 20): Promise<StudySessionSummary[]>
       sessions: Number(row.sessions),
     }));
   } catch {
+    if (options.googleOnly) return [];
     const [legacyRows, sessionRows] = await Promise.all([
       supabaseRequest<Array<{
         telegram_id: number | string;
