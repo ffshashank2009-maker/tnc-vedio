@@ -11,6 +11,7 @@ export interface StudySessionSummary {
   firstName: string;
   username: string | null;
   avatarUrl: string | null;
+  adminRole: "admin" | "super_admin" | null;
   seconds: number;
   sessions: number;
 }
@@ -71,11 +72,30 @@ export async function getLeaderboard(limit = 20, options: { googleOnly?: boolean
     const rows = options.googleOnly
       ? queriedRows.filter((row) => String(row.participant_id).startsWith("web_google_")).slice(0, maxRows)
       : queriedRows;
+    let profileById = new Map<string, string>();
+    let adminIds = new Set<string>();
+    try {
+      const [profiles, admins] = await Promise.all([
+        supabaseRequest<Array<{ user_id: string; email: string }>>("site_access?select=user_id,email&limit=1000"),
+        supabaseRequest<Array<{ user_id: string }>>("site_admins?select=user_id&limit=1000"),
+      ]);
+      profileById = new Map(profiles.map((profile) => [profile.user_id, profile.email.toLowerCase()]));
+      adminIds = new Set(admins.map((admin) => admin.user_id));
+    } catch {
+      // Leaderboard study data remains available if the optional role lookup fails.
+    }
     return rows.map((row) => ({
       telegramId: String(row.participant_id),
       firstName: row.first_name,
       username: row.username,
       avatarUrl: row.avatar_url,
+      adminRole: (() => {
+        const participantId = String(row.participant_id);
+        if (!participantId.startsWith("web_google_")) return null;
+        const userId = participantId.slice("web_google_".length);
+        const email = profileById.get(userId);
+        return email === "shashanksv2009@gmail.com" ? "super_admin" : adminIds.has(userId) ? "admin" : null;
+      })(),
       seconds: Number(row.seconds),
       sessions: Number(row.sessions),
     }));
@@ -100,6 +120,7 @@ export async function getLeaderboard(limit = 20, options: { googleOnly?: boolean
       firstName: row.first_name,
       username: row.username,
       avatarUrl: null,
+      adminRole: null,
       seconds: Number(row.seconds),
       sessions: sessionCounts.get(String(row.telegram_id)) ?? 0,
     }));
