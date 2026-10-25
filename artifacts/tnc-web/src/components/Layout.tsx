@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { BookOpen, Video, FileText, Home, LogOut, Shield, Menu, X, ChevronRight, Brain, Trophy, Maximize2, Minimize2, MessageCircle, Send, History, Moon, Sun, Snowflake } from "lucide-react";
 import { getUser, isAdmin, clearAdminToken } from "@/lib/auth";
-import { openExternalLink } from "@/lib/telegram";
-import { getTelegramUser } from "@/lib/telegram";
+import { getTelegramUser, isTelegramWebApp, openExternalLink, openTelegramLink } from "@/lib/telegram";
 import TncLoginPrompt from "@/components/TncLoginPrompt";
 import { useWinterEffects } from "@/components/WinterEffectsProvider";
 import { useSiteAuth } from "@/components/SiteAuthProvider";
@@ -134,13 +133,17 @@ export default function Layout({ children }: LayoutProps) {
     setMobileMenuOpen(false);
   }
 
-  function handleJoinChannel() {
+  function handleJoinChannel(event: React.MouseEvent<HTMLAnchorElement>) {
     try {
       localStorage.setItem(CHANNEL_JOIN_CLICKED_AT_KEY, String(Date.now()));
     } catch {
       // Keep the prompt visible on the next page load if storage is unavailable.
     }
     setShowChannelPrompt(false);
+    if (isTelegramWebApp()) {
+      event.preventDefault();
+      openTelegramLink(CHANNEL_URL);
+    }
   }
 
   return (
@@ -247,6 +250,7 @@ export default function Layout({ children }: LayoutProps) {
               )}
               <a
                 href={CHANNEL_URL}
+                onClick={handleJoinChannel}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/15 text-white hover:bg-white/25 transition-colors"
@@ -390,6 +394,7 @@ export default function Layout({ children }: LayoutProps) {
               </a>
               <a
                 href={CHANNEL_URL}
+                onClick={handleJoinChannel}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-1 py-2 text-sm font-medium text-blue-600 hover:text-blue-700"
