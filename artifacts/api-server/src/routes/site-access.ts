@@ -27,6 +27,7 @@ export interface SiteAccessRecord {
   user_id: string;
   email: string;
   display_name: string;
+  avatar_url: string | null;
   status: "pending" | "approved" | "denied" | "blocked";
   requested_at: string;
   approved_until: string | null;
@@ -75,9 +76,13 @@ async function ensureAccessRecord(identity: SiteIdentity): Promise<SiteAccessRec
   if (readError) throw readError;
 
   if (existing) {
-    if (existing.email !== identity.email) {
+    if (existing.email !== identity.email || existing.display_name !== identity.name || existing.avatar_url !== identity.avatarUrl) {
       const { data, error } = await admin.from("site_access")
-        .update({ email: identity.email, display_name: identity.name || existing.display_name })
+        .update({
+          email: identity.email,
+          display_name: identity.name || existing.display_name,
+          avatar_url: identity.avatarUrl,
+        })
         .eq("user_id", identity.id)
         .select("*")
         .single();
@@ -92,6 +97,7 @@ async function ensureAccessRecord(identity: SiteIdentity): Promise<SiteAccessRec
       user_id: identity.id,
       email: identity.email,
       display_name: identity.name,
+      avatar_url: identity.avatarUrl,
       status: "pending",
     })
     .select("*")
@@ -218,12 +224,14 @@ router.get("/admin/site-access", async (req: Request, res: Response): Promise<vo
   try {
     let query = getSupabaseAdmin().from("site_access").select("*").order("requested_at", { ascending: false });
     if (status !== "all") query = query.eq("status", status);
+    query = query.limit(1000);
     const { data, error } = await query;
     if (error) throw error;
     res.json({ users: (data ?? []).map((user) => ({
       userId: user.user_id,
       email: user.email,
       displayName: user.display_name,
+      avatarUrl: user.avatar_url,
       status: user.status,
       requestedAt: user.requested_at,
       reviewedAt: user.reviewed_at,
@@ -236,6 +244,51 @@ router.get("/admin/site-access", async (req: Request, res: Response): Promise<vo
     })) });
   } catch {
     res.status(500).json({ error: "Could not load site access requests" });
+  }
+});
+
+router.post("/site-activity/sync", async (req: Request, res: Response): Promise<void> => {
+  try {
+    const identity = await getSiteIdentity(req);
+    if (!identity) {
+      res.status(401).json({ error: "Sign in with Google to save study activity" });
+      return;
+    }
+    const { watchHistory, studyData, favorites } = req.body ?? {};
+    const isObject = (value: unknown): value is Record<string, unknown> =>
+      Boolean(value) && typeof value === "object" && !Array.isArray(value);
+    if (!isObject(watchHistory) || !isObject(studyData) || !isObject(favorites)) {
+      res.status(400).json({ error: "Activity snapshot must contain watchHistory, studyData, and favorites objects" });
+      return;
+    }
+    if (JSON.stringify({ watchHistory, studyData, favorites }).length > 250_000) {
+      res.status(413).json({ error: "Activity snapshot exceeds the allowed size" });
+      return;
+    }
+    const { error } = await getSupabaseAdmin().rpc("sync_site_user_activity", {
+      p_user_id: identity.id,
+      p_watch_history: watchHistory,
+      p_study_data: studyData,
+      p_favorites: favorites,
+    });
+    if (error) throw error;
+    res.json({ saved: true });
+  } catch {
+    res.status(500).json({ error: "Could not save study activity" });
+  }
+});
+
+router.get("/admin/site-access/:userId/activity", async (req: Request, res: Response): Promise<void> => {
+  if (!await requireAdmin(req, res)) return;
+  try {
+    const { data, error } = await getSupabaseAdmin().from("site_user_activity")
+      .select("watch_history,study_data,favorites,updated_at")
+      .eq("user_id", req.params.userId)
+      .maybeSingle();
+    if (error) throw error;
+    res.json(data ?? { watch_history: {}, study_data: {}, favorites: {}, updated_at: null });
+  } catch {
+    res.status(500).json({ error: "Could not load user study activity" });
   }
 });
 

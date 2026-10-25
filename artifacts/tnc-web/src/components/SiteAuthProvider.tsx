@@ -53,6 +53,7 @@ export function SiteAuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let active = true;
     let unsubscribe: () => void = () => {};
+    let removeActivityListener: () => void = () => {};
     void getSupabaseClient().then(async (client) => {
       if (!active) return;
       if (!client) {
@@ -61,17 +62,48 @@ export function SiteAuthProvider({ children }: { children: ReactNode }) {
       }
       const { data } = await client.auth.getSession();
       if (!active) return;
+      let currentSession = data.session;
       setSession(data.session);
       void loadAccess(data.session);
+      const syncLocalActivity = () => {
+        if (!currentSession) return;
+        const read = (key: string): Record<string, unknown> => {
+          try {
+            const value: unknown = JSON.parse(localStorage.getItem(key) ?? "{}");
+            return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
+          } catch {
+            return {};
+          }
+        };
+        const watchHistory = read("tnc_streak");
+        const studyData = {
+          currentStreak: watchHistory.currentStreak ?? 0,
+          longestStreak: watchHistory.longestStreak ?? 0,
+          lastStudyDate: watchHistory.lastStudyDate ?? null,
+          completedVideos: watchHistory.completedVideos ?? {},
+          completedQuizzes: watchHistory.completedQuizzes ?? {},
+        };
+        void customFetch("/api/site-activity/sync", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${currentSession.access_token}` },
+          body: JSON.stringify({ watchHistory, studyData, favorites: read("tnc_favorites") }),
+        }).catch(() => undefined);
+      };
+      window.addEventListener("tnc-site-activity-updated", syncLocalActivity);
+      removeActivityListener = () => window.removeEventListener("tnc-site-activity-updated", syncLocalActivity);
+      syncLocalActivity();
       const { data: authListener } = client.auth.onAuthStateChange((_event, nextSession) => {
+        currentSession = nextSession;
         setSession(nextSession);
         void loadAccess(nextSession);
+        if (nextSession) syncLocalActivity();
       });
       unsubscribe = () => authListener.subscription.unsubscribe();
     });
     return () => {
       active = false;
       unsubscribe();
+      removeActivityListener();
     };
   }, []);
 
