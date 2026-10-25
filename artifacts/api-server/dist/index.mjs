@@ -18421,8 +18421,8 @@ var require_escape_html = __commonJS({
   "node_modules/.pnpm/escape-html@1.0.3/node_modules/escape-html/index.js"(exports, module) {
     "use strict";
     var matchHtmlRegExp = /["'&<>]/;
-    module.exports = escapeHtml;
-    function escapeHtml(string) {
+    module.exports = escapeHtml2;
+    function escapeHtml2(string) {
       var str = "" + string;
       var match = matchHtmlRegExp.exec(str);
       if (!match) {
@@ -18553,13 +18553,13 @@ var require_finalhandler = __commonJS({
     "use strict";
     var debug = require_src()("finalhandler");
     var encodeUrl = require_encodeurl();
-    var escapeHtml = require_escape_html();
+    var escapeHtml2 = require_escape_html();
     var onFinished = require_on_finished();
     var parseUrl = require_parseurl();
     var statuses = require_statuses();
     var isFinished = onFinished.isFinished;
     function createHtmlDocument(message) {
-      var body = escapeHtml(message).replaceAll("\n", "<br>").replaceAll("  ", " &nbsp;");
+      var body = escapeHtml2(message).replaceAll("\n", "<br>").replaceAll("  ", " &nbsp;");
       return '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<title>Error</title>\n</head>\n<body>\n<pre>' + body + "</pre>\n</body>\n</html>\n";
     }
     module.exports = finalhandler;
@@ -20503,27 +20503,27 @@ var require_router = __commonJS({
     var slice = Array.prototype.slice;
     var flatten = Array.prototype.flat;
     var methods = METHODS.map((method) => method.toLowerCase());
-    module.exports = Router6;
+    module.exports = Router7;
     module.exports.Route = Route;
-    function Router6(options) {
-      if (!(this instanceof Router6)) {
-        return new Router6(options);
+    function Router7(options) {
+      if (!(this instanceof Router7)) {
+        return new Router7(options);
       }
       const opts = options || {};
-      function router6(req, res, next) {
-        router6.handle(req, res, next);
+      function router7(req, res, next) {
+        router7.handle(req, res, next);
       }
-      Object.setPrototypeOf(router6, this);
-      router6.caseSensitive = opts.caseSensitive;
-      router6.mergeParams = opts.mergeParams;
-      router6.params = {};
-      router6.strict = opts.strict;
-      router6.stack = [];
-      return router6;
+      Object.setPrototypeOf(router7, this);
+      router7.caseSensitive = opts.caseSensitive;
+      router7.mergeParams = opts.mergeParams;
+      router7.params = {};
+      router7.strict = opts.strict;
+      router7.stack = [];
+      return router7;
     }
-    Router6.prototype = function() {
+    Router7.prototype = function() {
     };
-    Router6.prototype.param = function param(name, fn) {
+    Router7.prototype.param = function param(name, fn) {
       if (!name) {
         throw new TypeError("argument name is required");
       }
@@ -20543,7 +20543,7 @@ var require_router = __commonJS({
       params.push(fn);
       return this;
     };
-    Router6.prototype.handle = function handle(req, res, callback) {
+    Router7.prototype.handle = function handle(req, res, callback) {
       if (!callback) {
         throw new TypeError("argument callback is required");
       }
@@ -20670,7 +20670,7 @@ var require_router = __commonJS({
         }
       }
     };
-    Router6.prototype.use = function use(handler) {
+    Router7.prototype.use = function use(handler) {
       let offset = 0;
       let path2 = "/";
       if (typeof handler !== "function") {
@@ -20703,7 +20703,7 @@ var require_router = __commonJS({
       }
       return this;
     };
-    Router6.prototype.route = function route(path2) {
+    Router7.prototype.route = function route(path2) {
       const route2 = new Route(path2);
       const layer = new Layer(path2, {
         sensitive: this.caseSensitive,
@@ -20718,7 +20718,7 @@ var require_router = __commonJS({
       return route2;
     };
     methods.concat("all").forEach(function(method) {
-      Router6.prototype[method] = function(path2) {
+      Router7.prototype[method] = function(path2) {
         const route = this.route(path2);
         route[method].apply(route, slice.call(arguments, 1));
         return this;
@@ -20901,13 +20901,13 @@ var require_application = __commonJS({
     var compileTrust = require_utils3().compileTrust;
     var resolve = __require("node:path").resolve;
     var once = require_once();
-    var Router6 = require_router();
+    var Router7 = require_router();
     var slice = Array.prototype.slice;
     var flatten = Array.prototype.flat;
     var app2 = exports = module.exports = {};
     var trustProxyDefaultSymbol = "@@symbol:trust_proxy_default";
     app2.init = function init() {
-      var router6 = null;
+      var router7 = null;
       this.cache = /* @__PURE__ */ Object.create(null);
       this.engines = /* @__PURE__ */ Object.create(null);
       this.settings = /* @__PURE__ */ Object.create(null);
@@ -20916,13 +20916,13 @@ var require_application = __commonJS({
         configurable: true,
         enumerable: true,
         get: function getrouter() {
-          if (router6 === null) {
-            router6 = new Router6({
+          if (router7 === null) {
+            router7 = new Router7({
               caseSensitive: this.enabled("case sensitive routing"),
               strict: this.enabled("strict routing")
             });
           }
-          return router6;
+          return router7;
         }
       });
     };
@@ -20993,15 +20993,15 @@ var require_application = __commonJS({
       if (fns.length === 0) {
         throw new TypeError("app.use() requires a middleware function");
       }
-      var router6 = this.router;
+      var router7 = this.router;
       fns.forEach(function(fn2) {
         if (!fn2 || !fn2.handle || !fn2.set) {
-          return router6.use(path2, fn2);
+          return router7.use(path2, fn2);
         }
         debug(".use app under %s", path2);
         fn2.mountpath = path2;
         fn2.parent = this;
-        router6.use(path2, function mounted_app(req, res, next) {
+        router7.use(path2, function mounted_app(req, res, next) {
           var orig = req.app;
           fn2.handle(req, res, function(err) {
             Object.setPrototypeOf(req, orig.request);
@@ -22443,7 +22443,7 @@ var require_send = __commonJS({
     var createError = require_http_errors();
     var debug = require_src()("send");
     var encodeUrl = require_encodeurl();
-    var escapeHtml = require_escape_html();
+    var escapeHtml2 = require_escape_html();
     var etag = require_etag();
     var fresh = require_fresh();
     var fs = __require("fs");
@@ -22496,7 +22496,7 @@ var require_send = __commonJS({
       }
       var res = this.res;
       var msg = statuses.message[status] || String(status);
-      var doc = createHtmlDocument("Error", escapeHtml(msg));
+      var doc = createHtmlDocument("Error", escapeHtml2(msg));
       clearHeaders(res);
       if (err && err.headers) {
         setHeaders(res, err.headers);
@@ -22596,7 +22596,7 @@ var require_send = __commonJS({
         return;
       }
       var loc = encodeUrl(collapseLeadingSlashes(this.path + "/"));
-      var doc = createHtmlDocument("Redirecting", "Redirecting to " + escapeHtml(loc));
+      var doc = createHtmlDocument("Redirecting", "Redirecting to " + escapeHtml2(loc));
       res.statusCode = 301;
       res.setHeader("Content-Type", "text/html; charset=UTF-8");
       res.setHeader("Content-Length", Buffer.byteLength(doc));
@@ -23000,7 +23000,7 @@ var require_response = __commonJS({
     var createError = require_http_errors();
     var deprecate = require_depd()("express");
     var encodeUrl = require_encodeurl();
-    var escapeHtml = require_escape_html();
+    var escapeHtml2 = require_escape_html();
     var http = __require("node:http");
     var onFinished = require_on_finished();
     var mime = require_mime_types();
@@ -23339,7 +23339,7 @@ var require_response = __commonJS({
           body = statuses.message[status] + ". Redirecting to " + address;
         },
         html: function() {
-          var u = escapeHtml(address);
+          var u = escapeHtml2(address);
           body = "<p>" + statuses.message[status] + ". Redirecting to " + u + "</p>";
         },
         default: function() {
@@ -23467,7 +23467,7 @@ var require_serve_static = __commonJS({
   "node_modules/.pnpm/serve-static@2.2.1/node_modules/serve-static/index.js"(exports, module) {
     "use strict";
     var encodeUrl = require_encodeurl();
-    var escapeHtml = require_escape_html();
+    var escapeHtml2 = require_escape_html();
     var parseUrl = require_parseurl();
     var resolve = __require("path").resolve;
     var send = require_send();
@@ -23553,7 +23553,7 @@ var require_serve_static = __commonJS({
         originalUrl.path = null;
         originalUrl.pathname = collapseLeadingSlashes(originalUrl.pathname + "/");
         var loc = encodeUrl(url.format(originalUrl));
-        var doc = createHtmlDocument("Redirecting", "Redirecting to " + escapeHtml(loc));
+        var doc = createHtmlDocument("Redirecting", "Redirecting to " + escapeHtml2(loc));
         res.statusCode = 301;
         res.setHeader("Content-Type", "text/html; charset=UTF-8");
         res.setHeader("Content-Length", Buffer.byteLength(doc));
@@ -23574,7 +23574,7 @@ var require_express = __commonJS({
     var EventEmitter = __require("node:events").EventEmitter;
     var mixin = require_merge_descriptors();
     var proto = require_application();
-    var Router6 = require_router();
+    var Router7 = require_router();
     var req = require_request();
     var res = require_response();
     exports = module.exports = createApplication;
@@ -23596,8 +23596,8 @@ var require_express = __commonJS({
     exports.application = proto;
     exports.request = req;
     exports.response = res;
-    exports.Route = Router6.Route;
-    exports.Router = Router6;
+    exports.Route = Router7.Route;
+    exports.Router = Router7;
     exports.json = bodyParser.json;
     exports.raw = bodyParser.raw;
     exports.static = require_serve_static();
@@ -24693,7 +24693,7 @@ var require_redact = __commonJS({
       } = options;
       validatePaths(paths);
       const pathStructure = buildPathStructure(paths);
-      return function redact(obj) {
+      return function redact2(obj) {
         if (strict && (obj === null || typeof obj !== "object")) {
           if (obj === null || obj === void 0) {
             return serialize ? serialize(obj) : obj;
@@ -28089,7 +28089,7 @@ var require_pino = __commonJS({
       const { opts, stream } = normalize(instance, caller(), ...args);
       if (opts.level && typeof opts.level === "string" && DEFAULT_LEVELS[opts.level.toLowerCase()] !== void 0) opts.level = opts.level.toLowerCase();
       const {
-        redact,
+        redact: redact2,
         crlf,
         serializers: serializers2,
         timestamp,
@@ -28123,8 +28123,8 @@ var require_pino = __commonJS({
       const stringifyFn = stringify.bind({
         [stringifySafeSym]: stringifySafe
       });
-      const stringifiers = redact ? redaction(redact, stringifyFn) : {};
-      const formatOpts = redact ? { stringify: stringifiers[redactFmtSym] } : { stringify: stringifyFn };
+      const stringifiers = redact2 ? redaction(redact2, stringifyFn) : {};
+      const formatOpts = redact2 ? { stringify: stringifiers[redactFmtSym] } : { stringify: stringifyFn };
       const end = "}" + (crlf ? "\r\n" : "\n");
       const coreChindings = asChindings.bind(null, {
         [chindingsSym]: "",
@@ -58579,7 +58579,7 @@ var require_router2 = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.Router = void 0;
     var composer_1 = __importDefault2(require_composer());
-    var Router6 = class {
+    var Router7 = class {
       constructor(routeFn, handlers = /* @__PURE__ */ new Map()) {
         this.routeFn = routeFn;
         this.handlers = handlers;
@@ -58615,7 +58615,7 @@ var require_router2 = __commonJS({
         });
       }
     };
-    exports.Router = Router6;
+    exports.Router = Router7;
   }
 });
 
@@ -59433,92 +59433,23 @@ var require_lib6 = __commonJS({
   }
 });
 
-// artifacts/api-server/src/lib/study-store.ts
-var study_store_exports = {};
-__export(study_store_exports, {
-  getLeaderboard: () => getLeaderboard,
-  recordStudyHeartbeat: () => recordStudyHeartbeat,
-  recordWebsiteStudyHeartbeat: () => recordWebsiteStudyHeartbeat
+// artifacts/api-server/src/lib/broadcast.ts
+var broadcast_exports = {};
+__export(broadcast_exports, {
+  claimComebackNotification: () => claimComebackNotification,
+  logBroadcast: () => logBroadcast
 });
 function ensureClient2() {
   if (!isSupabaseConfigured2()) throw new Error("Supabase not configured on server");
   return getSupabaseAdmin();
 }
-async function recordStudyHeartbeat(input) {
-  const seconds = Math.min(Math.max(Math.round(input.seconds), 0), 300);
-  if (!seconds) return;
-  const supabase = ensureClient2();
-  const { error } = await supabase.rpc("record_study_time", {
-    p_telegram_id: input.telegramId,
-    p_session_id: input.sessionId,
-    p_seconds: seconds
-  });
+async function claimComebackNotification() {
+  const { data, error } = await ensureClient2().rpc("claim_bot_comeback_notification");
   if (error) throw error;
-}
-async function recordWebsiteStudyHeartbeat(input) {
-  const seconds = Math.min(Math.max(Math.round(input.seconds), 0), 300);
-  const visitorId = input.visitorId.trim().slice(0, 120);
-  const visitorName = input.visitorName.trim().slice(0, 80);
-  if (!seconds || !visitorId || !visitorName || !input.sessionId) return;
-  await supabaseRequest("rpc/record_website_study_time", {
-    method: "POST",
-    body: JSON.stringify({
-      p_visitor_id: visitorId,
-      p_visitor_name: visitorName,
-      p_session_id: input.sessionId,
-      p_seconds: seconds
-    })
-  });
-}
-async function getLeaderboard(limit = 20) {
-  const maxRows = Math.min(limit, 100);
-  try {
-    const rows = await supabaseRequest(`study_leaderboard?select=participant_id,first_name,username,seconds,sessions&order=seconds.desc&limit=${maxRows}`);
-    return rows.map((row) => ({
-      telegramId: String(row.participant_id),
-      firstName: row.first_name,
-      username: row.username,
-      seconds: Number(row.seconds),
-      sessions: Number(row.sessions)
-    }));
-  } catch {
-    const [legacyRows, sessionRows] = await Promise.all([
-      supabaseRequest(`study_leaderboard?select=telegram_id,first_name,username,seconds&order=seconds.desc&limit=${maxRows}`),
-      supabaseRequest("study_sessions?select=telegram_id")
-    ]);
-    const sessionCounts = /* @__PURE__ */ new Map();
-    for (const session of sessionRows) {
-      const telegramId = String(session.telegram_id);
-      sessionCounts.set(telegramId, (sessionCounts.get(telegramId) ?? 0) + 1);
-    }
-    return legacyRows.map((row) => ({
-      telegramId: `telegram_${row.telegram_id}`,
-      firstName: row.first_name,
-      username: row.username,
-      seconds: Number(row.seconds),
-      sessions: sessionCounts.get(String(row.telegram_id)) ?? 0
-    }));
-  }
-}
-var init_study_store = __esm({
-  "artifacts/api-server/src/lib/study-store.ts"() {
-    "use strict";
-    init_supabase_server();
-    init_supabase_rest();
-  }
-});
-
-// artifacts/api-server/src/lib/broadcast.ts
-var broadcast_exports = {};
-__export(broadcast_exports, {
-  logBroadcast: () => logBroadcast
-});
-function ensureClient3() {
-  if (!isSupabaseConfigured2()) throw new Error("Supabase not configured on server");
-  return getSupabaseAdmin();
+  return data === true;
 }
 async function logBroadcast(input) {
-  const supabase = ensureClient3();
+  const supabase = ensureClient2();
   const payload = {
     admin_telegram_id: input.adminTelegramId,
     content_type: input.contentType,
@@ -59541,14 +59472,114 @@ var init_broadcast = __esm({
   }
 });
 
+// artifacts/api-server/src/lib/study-store.ts
+var study_store_exports = {};
+__export(study_store_exports, {
+  getLeaderboard: () => getLeaderboard,
+  recordStudyHeartbeat: () => recordStudyHeartbeat,
+  recordWebsiteStudyHeartbeat: () => recordWebsiteStudyHeartbeat
+});
+function ensureClient3() {
+  if (!isSupabaseConfigured2()) throw new Error("Supabase not configured on server");
+  return getSupabaseAdmin();
+}
+async function recordStudyHeartbeat(input) {
+  const seconds = Math.min(Math.max(Math.round(input.seconds), 0), 300);
+  if (!seconds) return;
+  const supabase = ensureClient3();
+  const { error } = await supabase.rpc("record_study_time", {
+    p_telegram_id: input.telegramId,
+    p_session_id: input.sessionId,
+    p_seconds: seconds
+  });
+  if (error) throw error;
+}
+async function recordWebsiteStudyHeartbeat(input) {
+  const seconds = Math.min(Math.max(Math.round(input.seconds), 0), 300);
+  const visitorId = input.visitorId.trim().slice(0, 120);
+  const visitorName = input.visitorName.trim().slice(0, 80);
+  if (!seconds || !visitorId || !visitorName || !input.sessionId) return;
+  await supabaseRequest("rpc/record_website_study_time", {
+    method: "POST",
+    body: JSON.stringify({
+      p_visitor_id: visitorId,
+      p_visitor_name: visitorName,
+      p_avatar_url: input.avatarUrl,
+      p_session_id: input.sessionId,
+      p_seconds: seconds
+    })
+  });
+}
+async function getLeaderboard(limit = 20, options = {}) {
+  const maxRows = Math.min(limit, 100);
+  const queryLimit = options.googleOnly ? 1e3 : maxRows;
+  try {
+    const queriedRows = await supabaseRequest(`study_leaderboard?select=participant_id,first_name,username,avatar_url,seconds,sessions&order=seconds.desc&limit=${queryLimit}`);
+    const rows = options.googleOnly ? queriedRows.filter((row) => String(row.participant_id).startsWith("web_google_")).slice(0, maxRows) : queriedRows;
+    let profileById = /* @__PURE__ */ new Map();
+    let adminIds = /* @__PURE__ */ new Set();
+    try {
+      const [profiles, admins] = await Promise.all([
+        supabaseRequest("site_access?select=user_id,email&limit=1000"),
+        supabaseRequest("site_admins?select=user_id&limit=1000")
+      ]);
+      profileById = new Map(profiles.map((profile) => [profile.user_id, profile.email.toLowerCase()]));
+      adminIds = new Set(admins.map((admin) => admin.user_id));
+    } catch {
+    }
+    return rows.map((row) => ({
+      telegramId: String(row.participant_id),
+      firstName: row.first_name,
+      username: row.username,
+      avatarUrl: row.avatar_url,
+      adminRole: (() => {
+        const participantId = String(row.participant_id);
+        if (!participantId.startsWith("web_google_")) return null;
+        const userId = participantId.slice("web_google_".length);
+        const email = profileById.get(userId);
+        return email === "shashanksv2009@gmail.com" ? "super_admin" : adminIds.has(userId) ? "admin" : null;
+      })(),
+      seconds: Number(row.seconds),
+      sessions: Number(row.sessions)
+    }));
+  } catch {
+    if (options.googleOnly) return [];
+    const [legacyRows, sessionRows] = await Promise.all([
+      supabaseRequest(`study_leaderboard?select=telegram_id,first_name,username,seconds&order=seconds.desc&limit=${maxRows}`),
+      supabaseRequest("study_sessions?select=telegram_id")
+    ]);
+    const sessionCounts = /* @__PURE__ */ new Map();
+    for (const session of sessionRows) {
+      const telegramId = String(session.telegram_id);
+      sessionCounts.set(telegramId, (sessionCounts.get(telegramId) ?? 0) + 1);
+    }
+    return legacyRows.map((row) => ({
+      telegramId: `telegram_${row.telegram_id}`,
+      firstName: row.first_name,
+      username: row.username,
+      avatarUrl: null,
+      adminRole: null,
+      seconds: Number(row.seconds),
+      sessions: sessionCounts.get(String(row.telegram_id)) ?? 0
+    }));
+  }
+}
+var init_study_store = __esm({
+  "artifacts/api-server/src/lib/study-store.ts"() {
+    "use strict";
+    init_supabase_server();
+    init_supabase_rest();
+  }
+});
+
 // artifacts/api-server/src/app.ts
-var import_express6 = __toESM(require_express2(), 1);
+var import_express7 = __toESM(require_express2(), 1);
 var import_cors = __toESM(require_lib3(), 1);
 var import_pino_http = __toESM(require_logger(), 1);
 import path from "path";
 
 // artifacts/api-server/src/routes/index.ts
-var import_express5 = __toESM(require_express2(), 1);
+var import_express6 = __toESM(require_express2(), 1);
 
 // artifacts/api-server/src/routes/health.ts
 var import_express = __toESM(require_express2(), 1);
@@ -63664,7 +63695,7 @@ router.get("/healthz", (_req, res) => {
 var health_default = router;
 
 // artifacts/api-server/src/routes/proxy.ts
-var import_express2 = __toESM(require_express2(), 1);
+var import_express3 = __toESM(require_express2(), 1);
 init_logger();
 
 // artifacts/api-server/src/lib/firebase-rest.ts
@@ -63893,29 +63924,6 @@ async function findAppUser(mobile) {
   );
   return rows[0];
 }
-async function listAppUsers() {
-  let rows;
-  try {
-    rows = await supabaseRequest(
-      "app_users?select=id,user_id,name,mobile,email,college,state,created_at&order=created_at.desc"
-    );
-  } catch (error) {
-    if (!(error instanceof Error) || !error.message.includes("created_at")) throw error;
-    rows = await supabaseRequest(
-      "app_users?select=id,user_id,name,mobile,email,college,state&order=id.desc"
-    );
-  }
-  return rows.map((row) => ({
-    id: row.id,
-    rowId: row.user_id,
-    name: row.name,
-    mobile: row.mobile,
-    email: row.email,
-    college: row.college,
-    state: row.state,
-    createdAt: row.created_at
-  }));
-}
 async function authenticateAppUser(mobile, password) {
   const user = await findAppUser(mobile);
   return user && verifyPassword(password, user.password_hash) ? toAuthResponse(user) : null;
@@ -63941,17 +63949,937 @@ async function createAppUser(input) {
 
 // artifacts/api-server/src/routes/proxy.ts
 init_user_store();
+
+// artifacts/api-server/src/lib/admin-directory.ts
+init_supabase_rest();
+
+// artifacts/api-server/src/lib/tnc-session.ts
+init_supabase_rest();
+var TNC_API_URL = "https://crm.tncnursing.in/common/";
+var SHARED_SESSION_ID = "shared";
+var SESSION_CACHE_MS = 1e4;
+var TncLoginRequiredError = class extends Error {
+  reason;
+  constructor(reason = "expired") {
+    super("TNC login required");
+    this.name = "TncLoginRequiredError";
+    this.reason = reason;
+  }
+};
+var sessionCache = null;
+var sessionRead = null;
+var TncApiError = class extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "TncApiError";
+  }
+};
+function tokenExpiry(token) {
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) return null;
+    const decoded = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    return typeof decoded.exp === "number" ? new Date(decoded.exp * 1e3).toISOString() : null;
+  } catch {
+    return null;
+  }
+}
+async function getSharedTncSession() {
+  return (await getSharedTncSessionStatus()).session;
+}
+async function getSharedTncSessionStatus() {
+  const status = await readSharedSessionStatus();
+  return {
+    available: Boolean(status.session),
+    expiresAt: status.session?.expires_at ?? null,
+    reason: status.reason
+  };
+}
+async function readSharedSessionStatus() {
+  if (sessionCache && Date.now() - sessionCache.cachedAt < SESSION_CACHE_MS) {
+    return sessionCache.status;
+  }
+  if (sessionRead) return sessionRead;
+  sessionRead = (async () => {
+    const rows = await supabaseRequest(
+      `tnc_shared_session?select=id,token,expires_at&id=eq.${SHARED_SESSION_ID}&limit=1`
+    );
+    const session = rows[0];
+    if (!session) return { session: null, reason: "missing" };
+    if (session.expires_at && Date.parse(session.expires_at) <= Date.now()) {
+      await clearSharedTncSession(session.token);
+      return { session: null, reason: "expired" };
+    }
+    return { session, reason: null };
+  })();
+  try {
+    const status = await sessionRead;
+    sessionCache = { status, cachedAt: Date.now() };
+    return status;
+  } finally {
+    sessionRead = null;
+  }
+}
+async function saveSharedTncSession(token) {
+  const expiresAt = tokenExpiry(token);
+  await supabaseRequest("tnc_shared_session?on_conflict=id", {
+    method: "POST",
+    headers: { Prefer: "resolution=merge-duplicates,return=representation" },
+    body: JSON.stringify({
+      id: SHARED_SESSION_ID,
+      token,
+      expires_at: expiresAt,
+      updated_at: (/* @__PURE__ */ new Date()).toISOString()
+    })
+  });
+  sessionCache = {
+    status: {
+      session: { id: SHARED_SESSION_ID, token, expires_at: expiresAt },
+      reason: null
+    },
+    cachedAt: Date.now()
+  };
+}
+async function clearSharedTncSession(token) {
+  const tokenCondition = token ? `&token=eq.${encodeURIComponent(token)}` : "";
+  await supabaseRequest(
+    `tnc_shared_session?id=eq.${SHARED_SESSION_ID}${tokenCondition}`,
+    { method: "DELETE", headers: { Prefer: "return=minimal" } }
+  );
+  sessionCache = null;
+}
+async function callTnc(payload, token) {
+  const response = await fetch(TNC_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...token ? { Authorization: `Bearer ${token}` } : {}
+    },
+    body: JSON.stringify({ payload: JSON.stringify({ fn: "common_fn", ...payload }) })
+  });
+  if (!response.ok && token && response.status === 401) throw new TncLoginRequiredError();
+  let body;
+  try {
+    body = await response.json();
+  } catch {
+    throw new TncApiError(`TNC returned an invalid response (${response.status})`);
+  }
+  if (!response.ok) {
+    throw new TncApiError(`TNC request failed (${response.status})`);
+  }
+  if (!Array.isArray(body) && body && typeof body === "object" && "status" in body && body.status === 1) {
+    const message = "msg" in body ? String(body.msg) : "TNC request failed";
+    if (token && /login required|token.*(expired|invalid)|expired.*token/i.test(message)) {
+      throw new TncLoginRequiredError();
+    }
+    throw new TncApiError(message);
+  }
+  return body;
+}
+async function tncPublicRequest(se, data) {
+  return callTnc({ se, data });
+}
+async function tncOptionalAuthRequest(se, data = {}, extra = {}) {
+  const session = await getSharedTncSession();
+  try {
+    return await callTnc({ se, data, ...extra }, session?.token);
+  } catch (error) {
+    if (session && error instanceof TncLoginRequiredError) {
+      await clearSharedTncSession(session.token);
+    }
+    throw error;
+  }
+}
+async function tncProtectedRequest(se, data = {}, extra = {}) {
+  const status = await readSharedSessionStatus();
+  const session = status.session;
+  if (!session) throw new TncLoginRequiredError(status.reason ?? "missing");
+  try {
+    return await callTnc({ se, data, ...extra }, session.token);
+  } catch (error) {
+    if (error instanceof TncLoginRequiredError) await clearSharedTncSession(session.token);
+    throw error;
+  }
+}
+async function loginSharedTncStudent(mobile, password) {
+  const result = await tncPublicRequest("lo_us", { mob: mobile, pass: password });
+  if (!result || typeof result !== "object" || Array.isArray(result)) {
+    throw new TncApiError("TNC returned an invalid login response");
+  }
+  const token = result.token;
+  if (typeof token !== "string" || !token) throw new TncApiError("TNC login did not return a token");
+  await saveSharedTncSession(token);
+}
+async function resetTncDeviceAndLogin(mobile, password, otp) {
+  await tncPublicRequest("ve_ot", { mob: mobile, otp });
+  await tncPublicRequest("re_de", { mob: mobile });
+  await loginSharedTncStudent(mobile, password);
+}
+
+// artifacts/api-server/src/lib/admin-directory.ts
+var PAGE_SIZE = 500;
+var CRM_PAGE_SIZE = 500;
+var CRM_PAGE_CONCURRENCY = 8;
+var DIRECTORY_CACHE_MS = 3e4;
+var PARTIAL_DIRECTORY_CACHE_MS = 15e3;
+var SENSITIVE_FIELD = /(password|pass|(?:^|[_-])pa(?:$|[_-])|token|secret|authorization|credential|api[_-]?key|otp|jwt)/i;
+var directoryCache = null;
+var directoryLoad = null;
+function redact(value) {
+  if (value === null || typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => redact(item) ?? null);
+  }
+  if (typeof value === "object") {
+    const safe = {};
+    for (const [key, item] of Object.entries(value)) {
+      if (SENSITIVE_FIELD.test(key)) continue;
+      const safeValue = redact(item);
+      if (safeValue !== void 0) safe[key] = safeValue;
+    }
+    return safe;
+  }
+  return void 0;
+}
+async function fetchAllRows(table, order) {
+  const rows = [];
+  for (let offset = 0; ; offset += PAGE_SIZE) {
+    const page = await supabaseRequest(
+      `${table}?select=*&order=${order}&limit=${PAGE_SIZE}&offset=${offset}`
+    );
+    rows.push(...page);
+    if (page.length < PAGE_SIZE) return rows;
+  }
+}
+function unwrapCrmJson(value) {
+  if (typeof value === "string") {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return {};
+    }
+  }
+  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+}
+async function fetchCrmUsers() {
+  if (!await getSharedTncSession()) throw new Error("No shared TNC session is available");
+  const rows = [];
+  for (let firstPage = 1; firstPage <= 100; firstPage += CRM_PAGE_CONCURRENCY) {
+    const pages = await Promise.all(Array.from({ length: CRM_PAGE_CONCURRENCY }, (_, index) => {
+      const page = firstPage + index;
+      return tncOptionalAuthRequest("fe", { json: "*" }, {
+        sch: "t_us",
+        cond: {},
+        page,
+        limit: CRM_PAGE_SIZE
+      });
+    }));
+    let foundLastPage = false;
+    for (const result of pages) {
+      if (!Array.isArray(result)) throw new Error("CRM user list response was not an array");
+      rows.push(...result);
+      if (result.length < CRM_PAGE_SIZE) {
+        foundLastPage = true;
+        break;
+      }
+    }
+    if (foundLastPage) break;
+    if (firstPage + CRM_PAGE_CONCURRENCY > 100) throw new Error("CRM user list exceeded the paging limit");
+  }
+  return rows.map((row) => {
+    const crmJson = unwrapCrmJson(row.json);
+    const flat = { ...row, ...crmJson };
+    return toDirectoryUser(
+      "crm",
+      row.row_id ?? crmJson._us_id ?? row.id,
+      crmJson._us_na ?? crmJson._na ?? row.mobilenumber ?? row.mobile ?? "CRM user",
+      flat,
+      row.up_on ?? row.cr_on ?? row.last_seen
+    );
+  });
+}
+function toDirectoryUser(source, id, name, row, activityAt) {
+  const safeDetails = redact(row);
+  const details = safeDetails && typeof safeDetails === "object" && !Array.isArray(safeDetails) ? safeDetails : {};
+  return {
+    id: `${source}:${String(id ?? "unknown")}`,
+    source,
+    name: typeof name === "string" && name.trim() ? name.trim() : String(id ?? "Unnamed user"),
+    details,
+    activityAt: typeof activityAt === "string" ? activityAt : null
+  };
+}
+async function loadAdminDirectoryUsers() {
+  const [appRows, telegramRows, mobileRows] = await Promise.all([
+    fetchAllRows("app_users", "id.asc"),
+    fetchAllRows("bot_users", "id.asc"),
+    fetchAllRows("mobile_app_users", "install_id.asc")
+  ]);
+  let crmUsers = [];
+  let unavailableSources = [];
+  try {
+    crmUsers = await fetchCrmUsers();
+  } catch (error) {
+    unavailableSources = ["crm"];
+    const { logger: logger2 } = await Promise.resolve().then(() => (init_logger(), logger_exports));
+    logger2.warn({ err: error }, "CRM users could not be added to the admin directory");
+  }
+  return {
+    users: [
+      ...appRows.map((row) => toDirectoryUser("app", row.user_id ?? row.id, row.name, row, row.updated_at ?? row.created_at)),
+      ...telegramRows.map((row) => toDirectoryUser(
+        "telegram",
+        row.telegram_id ?? row.id,
+        [row.first_name, row.last_name].filter((part) => typeof part === "string" && part.trim()).join(" "),
+        row,
+        row.last_seen ?? row.first_seen
+      )),
+      ...mobileRows.map((row) => toDirectoryUser(
+        "mobile",
+        row.install_id ?? row.id,
+        row.display_name,
+        row,
+        row.last_seen ?? row.first_seen
+      )),
+      ...crmUsers
+    ],
+    unavailableSources
+  };
+}
+async function listAdminDirectoryUsers() {
+  if (directoryCache && Date.now() < directoryCache.expiresAt) {
+    return directoryCache.value;
+  }
+  if (directoryLoad) return directoryLoad;
+  const load = loadAdminDirectoryUsers();
+  directoryLoad = load;
+  try {
+    const value = await load;
+    directoryCache = {
+      value,
+      expiresAt: Date.now() + (value.unavailableSources.length ? PARTIAL_DIRECTORY_CACHE_MS : DIRECTORY_CACHE_MS)
+    };
+    return value;
+  } finally {
+    if (directoryLoad === load) directoryLoad = null;
+  }
+}
+function invalidateAdminDirectoryCache() {
+  directoryCache = null;
+}
+
+// artifacts/api-server/src/routes/site-access.ts
+var import_express2 = __toESM(require_express2(), 1);
+init_supabase_server();
+
+// artifacts/api-server/src/lib/access-notifications.ts
+function escapeHtml(value) {
+  return value.replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[character] ?? character);
+}
+async function sendAccessDecisionEmail(input) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.ACCESS_EMAIL_FROM;
+  if (!apiKey || !from) return { sent: false, reason: "not_configured" };
+  const approved = input.decision === "approved";
+  const denied = input.decision === "denied";
+  const unapproved = input.decision === "unapproved";
+  const blocked = input.decision === "blocked";
+  const name = input.displayName.trim() || "there";
+  const subject = {
+    approved: "Your TNC Nursing access is approved",
+    denied: "Update on your TNC Nursing access request",
+    unapproved: "Your TNC Nursing approval has changed",
+    blocked: "Your TNC Nursing access is temporarily restricted",
+    unblocked: "Your TNC Nursing account restriction was lifted"
+  }[input.decision];
+  const title = {
+    approved: "Your access is approved",
+    denied: "Your access request was denied",
+    unapproved: "Your access approval was removed",
+    blocked: "Your account is blocked",
+    unblocked: "Your account block was removed"
+  }[input.decision];
+  const approvalDuration = input.approvedUntil ? `Your access is available until ${new Date(input.approvedUntil).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}.` : "Your access does not currently have an expiry date.";
+  const blockDuration = input.blockedUntil ? `Your access is blocked until ${new Date(input.blockedUntil).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}.` : "Your access is blocked permanently.";
+  const message = approved ? `You can now sign in to TNC Nursing and access learning content. ${approvalDuration}` : denied ? "Your request to access learning content was denied." : unapproved ? "Your approval has been removed, and your account is pending a new access decision. Learning content is unavailable until you are approved again." : blocked ? `You can no longer access learning content. ${blockDuration}` : `The block on your account has been removed. Your access status is ${input.restoredStatus ?? "restored"}.`;
+  const reason = input.reason?.trim();
+  const detail = reason && (denied || unapproved || blocked || input.decision === "unblocked") ? `<p><strong>${input.decision === "unblocked" ? "Previous block reason" : "Reason"}:</strong> ${escapeHtml(reason)}</p>` : "";
+  const action = approved || input.decision === "unblocked" ? '<p><a href="https://courses.tncnursing.site/videos">Open TNC Nursing</a></p>' : '<p>If you think this was a mistake, message <a href="https://t.me/Tncnursingbot">TNC Nursing support</a>.</p>';
+  const html = [
+    '<!doctype html><html lang="en"><body style="margin:0;background:#f1f5f9;padding:32px 16px;font-family:Arial,sans-serif;color:#0f172a">',
+    '<main style="max-width:560px;margin:0 auto;background:#fff;padding:32px;border:1px solid #e2e8f0">',
+    `<p style="margin:0;color:#047857;font-size:12px;font-weight:bold;letter-spacing:1px">TNC NURSING</p>`,
+    `<h1 style="font-size:24px">${title}</h1>`,
+    `<p>Hi ${escapeHtml(name)},</p>`,
+    `<p>${message}</p>`,
+    detail,
+    action,
+    "</main></body></html>"
+  ].join("");
+  const text = [
+    `Hi ${name},`,
+    "",
+    message,
+    approved ? approvalDuration : "",
+    blocked ? blockDuration : "",
+    reason && (denied || unapproved || blocked || input.decision === "unblocked") ? `${input.decision === "unblocked" ? "Previous block reason" : "Reason"}: ${reason}` : "",
+    approved || input.decision === "unblocked" ? "Open TNC Nursing: https://courses.tncnursing.site/videos" : "If you think this was a mistake, message https://t.me/Tncnursingbot"
+  ].filter(Boolean).join("\n");
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ from, to: [input.email], subject, html, text }),
+      signal: AbortSignal.timeout(1e4)
+    });
+    return response.ok ? { sent: true } : { sent: false, reason: "provider_error" };
+  } catch {
+    return { sent: false, reason: "provider_error" };
+  }
+}
+
+// artifacts/api-server/src/routes/site-access.ts
 var router2 = (0, import_express2.Router)();
+var ADMIN_EMAIL = "shashanksv2009@gmail.com";
+router2.get("/site-auth/config", (_req, res) => {
+  const supabaseUrl = process.env.SUPABASE_URL?.replace(/\/+$/, "");
+  const supabasePublicKey = process.env.SUPABASE_ANON_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY;
+  if (!supabaseUrl || !supabasePublicKey) {
+    res.status(503).json({ error: "Public Supabase URL and anon/publishable key are not configured" });
+    return;
+  }
+  res.setHeader("Cache-Control", "public, max-age=300");
+  res.json({ supabaseUrl, supabasePublicKey });
+});
+async function getSiteIdentity(req) {
+  const authorization = req.header("authorization");
+  const token = authorization?.match(/^Bearer\s+(.+)$/i)?.[1];
+  if (!token) return null;
+  const { data, error } = await getSupabaseAdmin().auth.getUser(token);
+  if (error || !data.user?.email) return null;
+  const metadata = data.user.user_metadata ?? {};
+  const name = typeof metadata.full_name === "string" ? metadata.full_name : typeof metadata.name === "string" ? metadata.name : "";
+  const avatarCandidate = typeof metadata.avatar_url === "string" ? metadata.avatar_url : typeof metadata.picture === "string" ? metadata.picture : "";
+  let avatarUrl = null;
+  try {
+    const parsed = new URL(avatarCandidate);
+    if (parsed.protocol === "https:" && (parsed.hostname === "googleusercontent.com" || parsed.hostname.endsWith(".googleusercontent.com"))) {
+      avatarUrl = parsed.toString();
+    }
+  } catch {
+  }
+  return { id: data.user.id, email: data.user.email.toLowerCase(), name, avatarUrl };
+}
+async function ensureAccessRecord(identity) {
+  const admin = getSupabaseAdmin();
+  const { data: existing, error: readError } = await admin.from("site_access").select("*").eq("user_id", identity.id).maybeSingle();
+  if (readError) throw readError;
+  if (existing) {
+    if (existing.email !== identity.email || existing.display_name !== identity.name || existing.avatar_url !== identity.avatarUrl) {
+      const { data: data2, error: error2 } = await admin.from("site_access").update({
+        email: identity.email,
+        display_name: identity.name || existing.display_name,
+        avatar_url: identity.avatarUrl
+      }).eq("user_id", identity.id).select("*").single();
+      if (error2) throw error2;
+      return data2;
+    }
+    return existing;
+  }
+  const { data, error } = await admin.from("site_access").insert({
+    user_id: identity.id,
+    email: identity.email,
+    display_name: identity.name,
+    avatar_url: identity.avatarUrl,
+    status: "pending"
+  }).select("*").single();
+  if (error) throw error;
+  return data;
+}
+async function getSiteAdminRole(identity) {
+  if (identity.email === ADMIN_EMAIL) return "super_admin";
+  const { data, error } = await getSupabaseAdmin().from("site_admins").select("role").eq("user_id", identity.id).maybeSingle();
+  if (error) throw error;
+  return data?.role === "admin" ? "admin" : null;
+}
+async function effectiveAccessRecord(identity) {
+  if (await getSiteAdminRole(identity)) {
+    return {
+      user_id: identity.id,
+      email: identity.email,
+      display_name: "Admin",
+      status: "approved",
+      requested_at: (/* @__PURE__ */ new Date()).toISOString(),
+      approved_until: null,
+      admin_notified_at: null,
+      reviewed_at: null,
+      reviewed_by: null,
+      denial_reason: null,
+      blocked_until: null,
+      blocked_reason: null,
+      status_before_block: "approved"
+    };
+  }
+  let record = await ensureAccessRecord(identity);
+  if (record.status === "blocked" && record.blocked_until && Date.parse(record.blocked_until) <= Date.now()) {
+    const { data, error } = await getSupabaseAdmin().from("site_access").update({
+      status: record.status_before_block,
+      blocked_until: null,
+      blocked_reason: null
+    }).eq("user_id", identity.id).select("*").single();
+    if (error) throw error;
+    record = data;
+  }
+  if (record.status === "approved" && record.approved_until && Date.parse(record.approved_until) <= Date.now()) {
+    const { data, error } = await getSupabaseAdmin().from("site_access").update({ status: "pending", approved_until: null }).eq("user_id", identity.id).select("*").single();
+    if (error) throw error;
+    record = data;
+  }
+  return record;
+}
+async function requireApprovedSiteUser(req, res, next) {
+  try {
+    const identity = await getSiteIdentity(req);
+    if (!identity) {
+      res.status(401).json({ error: "Sign in with Google to access learning content", code: "SITE_LOGIN_REQUIRED" });
+      return;
+    }
+    const access = await effectiveAccessRecord(identity);
+    if (access.status !== "approved") {
+      res.status(403).json({
+        error: access.status === "blocked" ? access.blocked_reason ?? "Your account is blocked" : "Learning access is not approved",
+        code: access.status === "blocked" ? "SITE_ACCESS_BLOCKED" : `SITE_ACCESS_${access.status.toUpperCase()}`,
+        status: access.status,
+        reason: access.status === "denied" ? access.denial_reason : access.blocked_reason,
+        blockedUntil: access.blocked_until
+      });
+      return;
+    }
+    next();
+  } catch (error) {
+    res.status(503).json({ error: "Access status could not be checked", code: "SITE_ACCESS_UNAVAILABLE" });
+  }
+}
+async function requireAdmin(req, res, minimumRole = "admin") {
+  try {
+    const identity = await getSiteIdentity(req);
+    const role = identity ? await getSiteAdminRole(identity) : null;
+    if (!identity || !role || minimumRole === "super_admin" && role !== "super_admin") {
+      res.status(403).json({ error: "Admin access is restricted" });
+      return null;
+    }
+    return identity;
+  } catch {
+    res.status(503).json({ error: "Admin access could not be verified" });
+    return null;
+  }
+}
+async function notifyTelegramAdmins(identity, access) {
+  const botToken = process.env.TELEGRAM_BOT_TOKEN ?? process.env.BOT_TOKEN;
+  const adminIds = [process.env.ADMIN_CHAT_ID, process.env.ADMIN_TELEGRAM_ID, process.env.TELEGRAM_ADMIN_ID].flatMap((value) => (value ?? "").split(",")).map((value) => value.trim()).filter((value) => /^-?\d+$/.test(value));
+  if (!botToken || adminIds.length === 0) return "not_configured";
+  if (access.admin_notified_at && Date.now() - Date.parse(access.admin_notified_at) < 15 * 60 * 1e3) return "recent";
+  const admin = getSupabaseAdmin();
+  const now = (/* @__PURE__ */ new Date()).toISOString();
+  const { data: claimed, error: claimError } = await admin.from("site_access").update({ admin_notified_at: now }).eq("user_id", identity.id).is("admin_notified_at", access.admin_notified_at).select("user_id").maybeSingle();
+  if (claimError) throw claimError;
+  if (!claimed) return "recent";
+  const text = [
+    "A student is waiting for TNC Nursing site access approval.",
+    `Name: ${identity.name || access.display_name || "Student"}`,
+    `Email: ${identity.email}`
+  ].join("\n");
+  const delivery = await Promise.all(adminIds.map(async (chatId) => {
+    try {
+      const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: chatId, text }),
+        signal: AbortSignal.timeout(8e3)
+      });
+      return response.ok;
+    } catch {
+      return false;
+    }
+  }));
+  if (delivery.some(Boolean)) return "sent";
+  await admin.from("site_access").update({ admin_notified_at: null }).eq("user_id", identity.id);
+  return "failed";
+}
+router2.get("/site-access/status", async (req, res) => {
+  try {
+    const identity = await getSiteIdentity(req);
+    if (!identity) {
+      res.status(401).json({ error: "Sign in with Google first" });
+      return;
+    }
+    const access = await effectiveAccessRecord(identity);
+    const adminRole = await getSiteAdminRole(identity);
+    if (access.status === "pending" && !access.admin_notified_at && Date.now() - Date.parse(access.requested_at) < 5 * 60 * 1e3) {
+      try {
+        await notifyTelegramAdmins(identity, access);
+      } catch {
+      }
+    }
+    res.json({
+      userId: access.user_id,
+      email: access.email,
+      displayName: access.display_name,
+      status: access.status,
+      adminRole,
+      requestedAt: access.requested_at,
+      approvedUntil: access.approved_until,
+      denialReason: access.denial_reason,
+      blockedUntil: access.blocked_until,
+      blockedReason: access.blocked_reason,
+      isAdmin: adminRole !== null
+    });
+  } catch {
+    res.status(503).json({ error: "Access request could not be created or loaded" });
+  }
+});
+router2.get("/admin/site-access/stats", async (req, res) => {
+  if (!await requireAdmin(req, res)) return;
+  try {
+    const statuses = ["pending", "approved", "denied", "blocked"];
+    const [totalResult, ...statusResults] = await Promise.all([
+      getSupabaseAdmin().from("site_access").select("user_id", { count: "exact", head: true }),
+      ...statuses.map((status) => getSupabaseAdmin().from("site_access").select("user_id", { count: "exact", head: true }).eq("status", status))
+    ]);
+    const failed = [totalResult, ...statusResults].find((result) => result.error);
+    if (failed?.error) throw failed.error;
+    res.json({
+      total: totalResult.count ?? 0,
+      pending: statusResults[0].count ?? 0,
+      approved: statusResults[1].count ?? 0,
+      denied: statusResults[2].count ?? 0,
+      blocked: statusResults[3].count ?? 0
+    });
+  } catch {
+    res.status(500).json({ error: "Could not load site access statistics" });
+  }
+});
+router2.get("/admin/site-admins", async (req, res) => {
+  if (!await requireAdmin(req, res, "super_admin")) return;
+  try {
+    const { data: admins, error } = await getSupabaseAdmin().from("site_admins").select("user_id,granted_by,granted_at").order("granted_at", { ascending: false });
+    if (error) throw error;
+    const userIds = (admins ?? []).map((admin) => admin.user_id);
+    const { data: profiles, error: profilesError } = userIds.length ? await getSupabaseAdmin().from("site_access").select("user_id,email,display_name,avatar_url").in("user_id", userIds) : { data: [], error: null };
+    if (profilesError) throw profilesError;
+    const profileById = new Map((profiles ?? []).map((profile) => [profile.user_id, profile]));
+    res.json({ admins: (admins ?? []).map((admin) => {
+      const profile = profileById.get(admin.user_id);
+      return {
+        userId: admin.user_id,
+        email: profile?.email ?? "",
+        displayName: profile?.display_name ?? "",
+        avatarUrl: profile?.avatar_url ?? null,
+        grantedAt: admin.granted_at,
+        grantedBy: admin.granted_by
+      };
+    }) });
+  } catch {
+    res.status(500).json({ error: "Could not load admin accounts" });
+  }
+});
+router2.put("/admin/site-admins", async (req, res) => {
+  const identity = await requireAdmin(req, res, "super_admin");
+  if (!identity) return;
+  const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
+  const enabled = req.body?.enabled;
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || typeof enabled !== "boolean") {
+    res.status(400).json({ error: "Provide a valid email and enabled boolean" });
+    return;
+  }
+  if (email === ADMIN_EMAIL) {
+    res.status(400).json({ error: "The superadmin role cannot be changed" });
+    return;
+  }
+  try {
+    const admin = getSupabaseAdmin();
+    const { data: target, error: targetError } = await admin.from("site_access").select("user_id,email").eq("email", email).maybeSingle();
+    if (targetError) throw targetError;
+    if (!target) {
+      res.status(404).json({ error: "No Google site account exists for that email" });
+      return;
+    }
+    if (enabled) {
+      const { error } = await admin.from("site_admins").upsert({
+        user_id: target.user_id,
+        role: "admin",
+        granted_by: identity.id
+      });
+      if (error) throw error;
+    } else {
+      const { error } = await admin.from("site_admins").delete().eq("user_id", target.user_id);
+      if (error) throw error;
+    }
+    const { error: auditError } = await admin.from("site_admin_audit").insert({
+      actor_user_id: identity.id,
+      target_user_id: target.user_id,
+      target_email: email,
+      action: enabled ? "promote" : "remove"
+    });
+    if (auditError) throw auditError;
+    res.json({ email, admin: enabled });
+  } catch {
+    res.status(500).json({ error: "Could not update admin role" });
+  }
+});
+router2.get("/admin/site-access", async (req, res) => {
+  if (!await requireAdmin(req, res)) return;
+  const status = typeof req.query.status === "string" ? req.query.status : "all";
+  if (!["all", "pending", "approved", "denied", "blocked"].includes(status)) {
+    res.status(400).json({ error: "Invalid access status" });
+    return;
+  }
+  try {
+    let query = getSupabaseAdmin().from("site_access").select("*").order("requested_at", { ascending: false });
+    if (status !== "all") query = query.eq("status", status);
+    query = query.limit(1e3);
+    const { data, error } = await query;
+    if (error) throw error;
+    const { data: siteAdmins, error: rolesError } = await getSupabaseAdmin().from("site_admins").select("user_id");
+    if (rolesError) throw rolesError;
+    const adminIds = new Set((siteAdmins ?? []).map((admin) => admin.user_id));
+    res.json({ users: (data ?? []).map((user) => ({
+      userId: user.user_id,
+      email: user.email,
+      displayName: user.display_name,
+      avatarUrl: user.avatar_url,
+      status: user.status,
+      adminRole: user.email.toLowerCase() === ADMIN_EMAIL ? "super_admin" : adminIds.has(user.user_id) ? "admin" : null,
+      requestedAt: user.requested_at,
+      reviewedAt: user.reviewed_at,
+      reviewedBy: user.reviewed_by,
+      approvedUntil: user.approved_until,
+      denialReason: user.denial_reason,
+      blockedUntil: user.blocked_until,
+      blockedReason: user.blocked_reason,
+      statusBeforeBlock: user.status_before_block
+    })) });
+  } catch {
+    res.status(500).json({ error: "Could not load site access requests" });
+  }
+});
+router2.get("/site-activity", async (req, res) => {
+  try {
+    const identity = await getSiteIdentity(req);
+    if (!identity) {
+      res.status(401).json({ error: "Sign in with Google to load saved activity" });
+      return;
+    }
+    const { data, error } = await getSupabaseAdmin().from("site_user_activity").select("watch_history,study_data,favorites,updated_at").eq("user_id", identity.id).maybeSingle();
+    if (error) throw error;
+    res.json(data ?? { watch_history: {}, study_data: {}, favorites: { courses: [], quizzes: [] }, updated_at: null });
+  } catch {
+    res.status(500).json({ error: "Could not load saved study activity" });
+  }
+});
+router2.post("/site-activity/sync", async (req, res) => {
+  try {
+    const identity = await getSiteIdentity(req);
+    if (!identity) {
+      res.status(401).json({ error: "Sign in with Google to save study activity" });
+      return;
+    }
+    const { watchHistory, studyData, favorites } = req.body ?? {};
+    const isObject = (value) => Boolean(value) && typeof value === "object" && !Array.isArray(value);
+    if (!isObject(watchHistory) || !isObject(studyData) || !isObject(favorites)) {
+      res.status(400).json({ error: "Activity snapshot must contain watchHistory, studyData, and favorites objects" });
+      return;
+    }
+    if (JSON.stringify({ watchHistory, studyData, favorites }).length > 25e4) {
+      res.status(413).json({ error: "Activity snapshot exceeds the allowed size" });
+      return;
+    }
+    const { error } = await getSupabaseAdmin().rpc("sync_site_user_activity", {
+      p_user_id: identity.id,
+      p_watch_history: watchHistory,
+      p_study_data: studyData,
+      p_favorites: favorites
+    });
+    if (error) throw error;
+    res.json({ saved: true });
+  } catch {
+    res.status(500).json({ error: "Could not save study activity" });
+  }
+});
+router2.get("/admin/site-access/:userId/activity", async (req, res) => {
+  if (!await requireAdmin(req, res, "super_admin")) return;
+  try {
+    const { data, error } = await getSupabaseAdmin().from("site_user_activity").select("watch_history,study_data,favorites,updated_at").eq("user_id", req.params.userId).maybeSingle();
+    if (error) throw error;
+    res.json(data ?? { watch_history: {}, study_data: {}, favorites: {}, updated_at: null });
+  } catch {
+    res.status(500).json({ error: "Could not load user study activity" });
+  }
+});
+router2.post("/site-access/notify-admin", async (req, res) => {
+  try {
+    const identity = await getSiteIdentity(req);
+    if (!identity) {
+      res.status(401).json({ error: "Sign in with Google first" });
+      return;
+    }
+    const access = await effectiveAccessRecord(identity);
+    if (access.status !== "pending") {
+      res.status(409).json({ error: "Only pending requests can notify the administrator" });
+      return;
+    }
+    const result = await notifyTelegramAdmins(identity, access);
+    if (result === "not_configured") {
+      res.status(503).json({ error: "Telegram admin notifications are not configured" });
+      return;
+    }
+    if (result === "recent") {
+      res.status(429).json({ error: "The administrator was notified recently. Please wait before notifying again." });
+      return;
+    }
+    if (result === "failed") {
+      res.status(502).json({ error: "The Telegram notification could not be delivered" });
+      return;
+    }
+    res.json({ notified: true });
+  } catch {
+    res.status(500).json({ error: "Could not notify the administrator" });
+  }
+});
+router2.post("/admin/site-access/:userId/decision", async (req, res) => {
+  const identity = await requireAdmin(req, res);
+  if (!identity) return;
+  const status = req.body?.status;
+  const reason = typeof req.body?.reason === "string" ? req.body.reason.trim().slice(0, 1e3) : "";
+  const requestedDuration = req.body?.durationHours;
+  const durationHours = requestedDuration === null ? null : requestedDuration === void 0 ? 720 : Number(requestedDuration);
+  if (status !== "approved" && status !== "denied" && status !== "pending") {
+    res.status(400).json({ error: "Decision must be approved, denied, or pending" });
+    return;
+  }
+  if (status === "approved" && durationHours !== null && (!Number.isInteger(durationHours) || durationHours < 1 || durationHours > 8760)) {
+    res.status(400).json({ error: "Approval duration must be from 1 to 8760 hours, or null for permanent access" });
+    return;
+  }
+  try {
+    const approvedUntil = status === "approved" && durationHours !== null ? new Date(Date.now() + durationHours * 60 * 60 * 1e3).toISOString() : null;
+    const { data, error } = await getSupabaseAdmin().from("site_access").update({
+      status,
+      approved_until: approvedUntil,
+      reviewed_at: (/* @__PURE__ */ new Date()).toISOString(),
+      reviewed_by: identity.email,
+      denial_reason: status === "denied" ? reason || null : null,
+      blocked_until: null,
+      blocked_reason: null
+    }).eq("user_id", req.params.userId).select("*").single();
+    if (error) throw error;
+    const email = await sendAccessDecisionEmail({
+      email: data.email,
+      displayName: data.display_name,
+      decision: status === "pending" ? "unapproved" : status,
+      reason: status === "denied" || status === "pending" ? reason || null : null,
+      approvedUntil
+    });
+    res.json({ user: data, emailSent: email.sent, emailReason: email.sent ? null : email.reason });
+  } catch {
+    res.status(500).json({ error: "Could not update the access request" });
+  }
+});
+router2.post("/admin/site-access/:userId/block", async (req, res) => {
+  const identity = await requireAdmin(req, res);
+  if (!identity) return;
+  const reason = typeof req.body?.reason === "string" ? req.body.reason.trim().slice(0, 1e3) : "";
+  const durationHours = req.body?.durationHours;
+  if (!reason || durationHours !== null && (!Number.isInteger(durationHours) || durationHours < 1 || durationHours > 8760)) {
+    res.status(400).json({ error: "Provide a reason and a valid duration in hours, or null for a permanent block" });
+    return;
+  }
+  try {
+    const admin = getSupabaseAdmin();
+    const { data: current, error: readError } = await admin.from("site_access").select("status,status_before_block,email").eq("user_id", req.params.userId).single();
+    if (readError) throw readError;
+    if (current.email?.toLowerCase() === ADMIN_EMAIL) {
+      res.status(400).json({ error: "The site administrator cannot be blocked here" });
+      return;
+    }
+    const blockedUntil = durationHours === null ? null : new Date(Date.now() + durationHours * 60 * 60 * 1e3).toISOString();
+    const { data, error } = await admin.from("site_access").update({
+      status: "blocked",
+      status_before_block: current.status === "blocked" ? current.status_before_block : current.status,
+      blocked_until: blockedUntil,
+      blocked_reason: reason
+    }).eq("user_id", req.params.userId).select("*").single();
+    if (error) throw error;
+    const email = await sendAccessDecisionEmail({
+      email: data.email,
+      displayName: data.display_name,
+      decision: "blocked",
+      reason: data.blocked_reason,
+      blockedUntil
+    });
+    res.json({ user: data, emailSent: email.sent, emailReason: email.sent ? null : email.reason });
+  } catch {
+    res.status(500).json({ error: "Could not block this user" });
+  }
+});
+router2.post("/admin/site-access/:userId/unblock", async (req, res) => {
+  if (!await requireAdmin(req, res)) return;
+  try {
+    const admin = getSupabaseAdmin();
+    const { data: current, error: readError } = await admin.from("site_access").select("status,status_before_block,blocked_reason,email,display_name").eq("user_id", req.params.userId).single();
+    if (readError) throw readError;
+    if (current.status !== "blocked") {
+      res.status(400).json({ error: "This user is not blocked" });
+      return;
+    }
+    const { data, error } = await admin.from("site_access").update({ status: current.status_before_block, blocked_until: null, blocked_reason: null }).eq("user_id", req.params.userId).select("*").single();
+    if (error) throw error;
+    const email = await sendAccessDecisionEmail({
+      email: data.email,
+      displayName: data.display_name,
+      decision: "unblocked",
+      reason: current.blocked_reason,
+      restoredStatus: data.status
+    });
+    res.json({ user: data, emailSent: email.sent, emailReason: email.sent ? null : email.reason });
+  } catch {
+    res.status(500).json({ error: "Could not unblock this user" });
+  }
+});
+var site_access_default = router2;
+
+// artifacts/api-server/src/routes/proxy.ts
+var router3 = (0, import_express3.Router)();
 var CRM_BASE = "https://crm.tncnursing.in";
 var ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "";
 var ADMIN_TOKEN = process.env.ADMIN_TOKEN ?? "";
 var PROMO_EXPIRES_DAYS = 30;
-function requireAdmin(req, res) {
+function requireAdmin2(req, res) {
   const token = req.header("x-admin-token") ?? req.query.adminToken;
   if (!ADMIN_TOKEN || token !== ADMIN_TOKEN) {
     res.status(401).json({ error: "Unauthorized" });
     return false;
   }
+  return true;
+}
+function sendTncLoginRequired(res, error) {
+  if (!(error instanceof TncLoginRequiredError)) return false;
+  res.status(428).json({
+    error: error.reason === "expired" ? "TNC session expired" : "TNC login required",
+    code: "TNC_LOGIN_REQUIRED",
+    reason: error.reason
+  });
   return true;
 }
 if (!ADMIN_PASSWORD) {
@@ -63975,17 +64903,139 @@ async function crmQuery(payload) {
 }
 function buildMediaUrl(path2) {
   if (!path2) return null;
-  if (path2.startsWith("http")) return path2;
-  return `${CRM_BASE}/${path2.replace(/^\//, "")}`;
+  const normalized = path2.replace(/\\\//g, "/").trim();
+  if (/^https?:\/\//i.test(normalized)) return normalized;
+  return `${CRM_BASE}/${normalized.replace(/^\/+/, "")}`;
+}
+function unwrapJson(value) {
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (trimmed.startsWith("{") && trimmed.endsWith("}") || trimmed.startsWith("[") && trimmed.endsWith("]")) {
+      try {
+        return unwrapJson(JSON.parse(trimmed));
+      } catch {
+        return value;
+      }
+    }
+    return value;
+  }
+  if (Array.isArray(value)) return value.map(unwrapJson);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, unwrapJson(item)]));
+  }
+  return value;
+}
+function recordJson(value) {
+  const unwrapped = unwrapJson(value);
+  return unwrapped && typeof unwrapped === "object" && !Array.isArray(unwrapped) ? unwrapped : {};
+}
+function loadPdfCandidates(json) {
+  const roots = [
+    recordJson(json._de)._no,
+    json._no,
+    json._no_ur,
+    json.notes,
+    json._pd,
+    json._pd_ur,
+    json.pdf,
+    json.pdf_url,
+    json._pdf_url,
+    json._no_url,
+    json.note_url,
+    json.document_url,
+    json.file_url,
+    json._no_path,
+    json._no_file,
+    json._no_src,
+    json._at,
+    json.attachment
+  ];
+  const candidates = [];
+  const visit = (value) => {
+    const unwrapped = unwrapJson(value);
+    if (Array.isArray(unwrapped)) {
+      for (const item of unwrapped) visit(item);
+      return;
+    }
+    if (unwrapped && typeof unwrapped === "object") {
+      for (const [key, item] of Object.entries(unwrapped)) {
+        if (/^(url|uri|path|file|src|href|link|pdf_url|file_url|document_url|note_url|_url|_no_url)$/i.test(key)) visit(item);
+      }
+      return;
+    }
+    if (typeof unwrapped !== "string") return;
+    for (const part of unwrapped.split(",")) {
+      const candidate = part.trim().replace(/\\\//g, "/");
+      if (isPdfCandidate(candidate)) candidates.push(candidate);
+    }
+  };
+  for (const root of roots) visit(root);
+  return [...new Set(candidates)];
+}
+function pdfProxyUrl(candidate) {
+  const resolved = new URL(candidate.replace(/\\\//g, "/"), `${CRM_BASE}/`);
+  if (resolved.hostname === new URL(CRM_BASE).hostname && !resolved.search) {
+    const path2 = resolved.pathname.replace(/^\/+/, "");
+    return `/api/pdf?path=${encodeURIComponent(path2)}`;
+  }
+  return `/api/pdf?url=${encodeURIComponent(resolved.toString())}`;
+}
+async function loadCourseContent(courseId) {
+  const batches = await tncProtectedRequest("fe_co", { limit: 1e3 });
+  const batch = Array.isArray(batches) ? batches.find((row) => String(row.row_id ?? "") === courseId) : void 0;
+  const batchJson = recordJson(batch?.json);
+  const subjectIds = Array.isArray(batchJson._su) ? [...new Set(batchJson._su.filter((id) => typeof id === "string" && Boolean(id)))] : [];
+  const chapterIds = Array.isArray(batchJson._ch) ? [...new Set(batchJson._ch.filter((id) => typeof id === "string" && Boolean(id)))] : [];
+  const parentCourseIds = Array.isArray(batchJson._co) ? batchJson._co.filter((id) => typeof id === "string" && Boolean(id)) : [];
+  const courseRefId = String(batch?.course_id ?? batch?.wc_refid ?? batchJson.course_id ?? batchJson.wc_refid ?? parentCourseIds[0] ?? courseId);
+  let subjectData = [];
+  if (subjectIds.length) {
+    subjectData = await tncProtectedRequest("fe", { json: "*" }, {
+      sch: "t_su",
+      cond: { "(row_id)": subjectIds },
+      limit: 1e3
+    });
+  }
+  if (!Array.isArray(subjectData) || subjectData.length === 0) {
+    subjectData = await tncProtectedRequest("fe", { json: "*" }, {
+      sch: "t_su",
+      cond: { co_refid: courseRefId },
+      limit: 1e3
+    });
+  }
+  const linkedSubjectIds = Array.isArray(subjectData) ? [...new Set(subjectData.map((row) => String(row.row_id ?? "").trim()).filter(Boolean))] : [];
+  const queries = [];
+  if (chapterIds.length) {
+    queries.push(tncProtectedRequest("fe", { json: "*" }, {
+      sch: "t_ch",
+      cond: { "(row_id)": chapterIds },
+      limit: 1e3
+    }));
+  }
+  if (linkedSubjectIds.length) {
+    queries.push(tncProtectedRequest("fe", { json: "*" }, {
+      sch: "t_ch",
+      cond: { "(su_refid)": linkedSubjectIds },
+      limit: 1e3
+    }));
+  }
+  const contentRows = (await Promise.all(queries)).flatMap((data) => Array.isArray(data) ? data : []);
+  const contentData = [...new Map(contentRows.map((row) => [String(row.row_id ?? row.id ?? JSON.stringify(row)), row])).values()];
+  return { subjectData, contentData };
+}
+function courseDescriptionText(value) {
+  if (typeof value !== "string") return "";
+  return value.replace(/\\x3c/gi, "<").replace(/\\x3e/gi, ">").replace(/&lt;/gi, "<").replace(/&gt;/gi, ">").replace(/<br\s*\/?>/gi, "\n").replace(/<\/(?:div|p|li|h[1-6])\s*>/gi, "\n").replace(/<[^>]*>/g, " ").replace(/&nbsp;|&#160;|&#x0*a0;/gi, " ").replace(/&amp;/gi, "&").replace(/&quot;/gi, '"').replace(/&#39;|&apos;/gi, "'").replace(/[ \t\f\v]+/g, " ").replace(/ *\n */g, "\n").replace(/\n{2,}/g, "\n").trim();
 }
 function parseCourse(row) {
-  const json = row.json ?? {};
+  const json = typeof row.json === "string" ? JSON.parse(row.json) : row.json ?? {};
   const at = json._at ?? {};
   return {
     id: row.id,
     rowId: row.row_id,
     name: json._na ?? "",
-    description: json._de ?? "",
+    description: courseDescriptionText(json._de),
+    price: String(json._pr ?? ""),
     serialNo: json._sno ?? "",
     imageUrl: buildMediaUrl(at.url),
     createdAt: row.cr_on,
@@ -64051,13 +65101,12 @@ function convertFirebaseStorageUrl(url) {
   return url;
 }
 function parseChapter(row) {
-  const json = row.json ?? {};
+  const json = recordJson(row.json);
   const title = json._na ?? "Untitled";
   const derivedSubject = deriveSubject(title);
   const vi = json._vi ?? {};
-  const de = json._de ?? {};
+  const de = recordJson(json._de);
   const deVi = de._vi ?? {};
-  const deNo = de._no ?? {};
   const firebaseId = vi._fs_id ?? deVi.fs_id ?? "";
   const hasFirebaseId = typeof firebaseId === "string" && firebaseId.trim().length > 10;
   let videoUrl = null;
@@ -64074,8 +65123,8 @@ function parseChapter(row) {
       vi.video_url,
       deVi._vi_url,
       deVi.video_url,
-      json._de?._vi?._vi_url,
-      json._de?._vi?.url
+      deVi._vi_url,
+      deVi.url
     ].filter(Boolean);
     for (const raw of rawVideoUrls) {
       if (!raw || typeof raw !== "string") continue;
@@ -64096,67 +65145,33 @@ function parseChapter(row) {
       }
     }
   }
-  const pdfCandidates = [
-    deNo.url,
-    deNo.uri,
-    deNo._no_url,
-    deNo.pdf_url,
-    deNo._url,
-    deNo.link,
-    deNo.file_url,
-    deNo.document_url,
-    deNo.note_url,
-    deNo.path,
-    deNo.file,
-    deNo.src,
-    deNo.href,
-    // Also check json._no directly (not just de._no)
-    typeof json._no === "object" && json._no !== null ? json._no.url : null,
-    typeof json._no === "object" && json._no !== null ? json._no.uri : null,
-    typeof json._no === "object" && json._no !== null ? json._no.path : null,
-    typeof json._no === "object" && json._no !== null ? json._no.file : null,
-    typeof json._no === "object" && json._no !== null ? json._no.src : null,
-    typeof json._no === "object" && json._no !== null ? json._no.href : null,
-    typeof json._no === "object" && json._no !== null ? json._no.file_url : null,
-    typeof json._no === "object" && json._no !== null ? json._no.document_url : null,
-    json.pdf_url,
-    json._pdf_url,
-    json._no_url,
-    json.note_url,
-    json.document_url,
-    json.file_url,
-    json._no_path,
-    json._no_file,
-    json._no_src,
-    typeof json._no === "string" ? json._no : null
-  ].filter((value) => typeof value === "string" && isPdfCandidate(value));
+  const pdfCandidates = loadPdfCandidates(json);
   const pdfCandidate = pdfCandidates[0] ?? null;
   const rawPdfPath = (pdfCandidate ?? "").replace(/^\//, "");
   const isCrmHostedPdf = rawPdfPath.startsWith("uploads/");
   let pdfUrl = null;
   if (pdfCandidate && isCrmHostedPdf) {
-    pdfUrl = `/api/pdf?path=${encodeURIComponent(rawPdfPath)}`;
+    pdfUrl = pdfProxyUrl(pdfCandidate);
     if (!videoUrl && contentType !== "firebase") {
       contentType = "pdf";
     }
   }
-  if (!videoUrl && !pdfUrl && pdfCandidate && pdfCandidate.startsWith("http")) {
-    pdfUrl = `/api/pdf?url=${encodeURIComponent(pdfCandidate)}`;
+  if (!videoUrl && !pdfUrl && pdfCandidate && /^https?:\/\//i.test(pdfCandidate)) {
+    pdfUrl = pdfProxyUrl(pdfCandidate);
     if (contentType === "none") contentType = "pdf";
   }
-  if (!videoUrl && !pdfUrl && pdfCandidate && !pdfCandidate.startsWith("http")) {
-    pdfUrl = `/api/pdf?path=${encodeURIComponent(rawPdfPath)}`;
+  if (!videoUrl && !pdfUrl && pdfCandidate && !/^https?:\/\//i.test(pdfCandidate)) {
+    pdfUrl = pdfProxyUrl(pdfCandidate);
     if (contentType === "none") contentType = "pdf";
   }
-  if (pdfUrl) {
-    videoUrl = null;
-    contentType = "pdf";
+  if (pdfCandidate && !pdfUrl) {
+    pdfUrl = pdfProxyUrl(pdfCandidate);
   }
   const hasPdfData = pdfCandidates.length > 0;
   if (hasPdfData && !videoUrl && contentType === "none") {
     contentType = "pdf";
   }
-  const finalType = videoUrl ? "video" : pdfUrl || hasPdfData ? "pdf" : "content";
+  const finalType = videoUrl || hasFirebaseId ? "video" : pdfUrl || hasPdfData ? "pdf" : "content";
   return {
     id: row.id,
     rowId: row.row_id,
@@ -64164,6 +65179,7 @@ function parseChapter(row) {
     description: "",
     videoUrl,
     pdfUrl,
+    pdfUrls: pdfCandidates.map(pdfProxyUrl),
     firebaseId: hasFirebaseId ? firebaseId : null,
     contentType,
     type: finalType,
@@ -64188,7 +65204,7 @@ function parseSlider(row) {
   };
 }
 function parseExam(row) {
-  const json = row.json ?? {};
+  const json = typeof row.json === "string" ? JSON.parse(row.json) : row.json ?? {};
   const quRefids = row.qu_refid ?? [];
   return {
     examId: row.row_id,
@@ -64205,7 +65221,7 @@ function parseExam(row) {
   };
 }
 function parseQuestion(row) {
-  const json = row.json ?? {};
+  const json = typeof row.json === "string" ? JSON.parse(row.json) : row.json ?? {};
   const quObj = json._qu ?? {};
   const ops = json._op ?? {};
   const soObj = json._so ?? {};
@@ -64222,15 +65238,9 @@ function parseQuestion(row) {
     questionNo: json._qno ?? null
   };
 }
-router2.get("/courses", async (_req, res) => {
+router3.get("/courses", async (_req, res) => {
   try {
-    const data = await crmQuery({
-      fn: "common_fn",
-      se: "fe",
-      sch: "t_co",
-      data: { json: "*" },
-      cond: {}
-    });
+    const data = await tncProtectedRequest("fe_co");
     const courses = Array.isArray(data) ? data.map(parseCourse) : [];
     courses.sort((a, b) => {
       const aTime = String(a.createdAt ?? "");
@@ -64239,23 +65249,20 @@ router2.get("/courses", async (_req, res) => {
     });
     res.json(courses);
   } catch (err) {
+    if (sendTncLoginRequired(res, err)) return;
     logger.error({ err }, "Failed to fetch courses");
     res.status(500).json({ error: "Failed to fetch courses" });
   }
 });
-router2.get("/subjects", async (req, res) => {
+router3.get("/subjects", requireApprovedSiteUser, async (req, res) => {
   try {
     const { courseId } = req.query;
-    const cond = courseId ? { co_refid: courseId } : {};
-    const [contentData, subjectData] = await Promise.all([
-      crmQuery({ fn: "common_fn", se: "fe", sch: "t_ch", data: { json: "*" }, cond }),
-      crmQuery({ fn: "common_fn", se: "fe", sch: "t_su", data: { json: "*" }, cond })
-    ]);
+    const { subjectData, contentData } = await loadCourseContent(String(courseId ?? ""));
     const subjects = [];
     const subjectById = /* @__PURE__ */ new Map();
     if (Array.isArray(subjectData)) {
       for (const row of subjectData) {
-        const json = row.json ?? {};
+        const json = recordJson(row.json);
         const rowId = String(row.row_id ?? "").trim();
         if (!rowId) continue;
         const subject = {
@@ -64293,8 +65300,11 @@ router2.get("/subjects", async (req, res) => {
           subjectById.set(subject.rowId, subject);
         }
         subject.totalCount += 1;
-        if (parsed.pdfUrl || parsed.contentType === "pdf") subject.pdfCount += 1;
-        else subject.videoCount += 1;
+        const pdfCount = Array.isArray(parsed.pdfUrls) ? parsed.pdfUrls.length : 0;
+        const hasPdf = pdfCount > 0 || Boolean(parsed.pdfUrl) || parsed.contentType === "pdf";
+        const hasVideo = parsed.contentType === "youtube" || parsed.contentType === "firebase" || Boolean(parsed.videoUrl);
+        subject.pdfCount += pdfCount || Number(hasPdf);
+        if (hasVideo || !hasPdf) subject.videoCount += 1;
       }
     }
     subjects.sort((a, b) => {
@@ -64304,11 +65314,12 @@ router2.get("/subjects", async (req, res) => {
     });
     res.json(subjects);
   } catch (err) {
+    if (sendTncLoginRequired(res, err)) return;
     logger.error({ err }, "Failed to fetch subjects");
     res.status(500).json({ error: "Failed to fetch subjects" });
   }
 });
-router2.get("/pdf", async (req, res) => {
+router3.get("/pdf", requireApprovedSiteUser, async (req, res) => {
   try {
     const { path: pdfPath, url: pdfUrl } = req.query;
     if (!pdfPath && !pdfUrl) {
@@ -64347,7 +65358,7 @@ router2.get("/pdf", async (req, res) => {
     res.status(500).json({ error: "Failed to load PDF" });
   }
 });
-router2.get("/media-proxy", async (req, res) => {
+router3.get("/media-proxy", requireApprovedSiteUser, async (req, res) => {
   try {
     const { url } = req.query;
     if (!url || typeof url !== "string") {
@@ -64392,23 +65403,15 @@ router2.get("/media-proxy", async (req, res) => {
     res.status(500).json({ error: "Media proxy failed" });
   }
 });
-router2.get("/notes", async (req, res) => {
+router3.get("/notes", requireApprovedSiteUser, async (req, res) => {
   try {
     const { courseId, limit: limitParam } = req.query;
-    const cond = {};
-    if (courseId) cond.co_refid = courseId;
-    const data = await crmQuery({
-      fn: "common_fn",
-      se: "fe",
-      sch: "t_ch",
-      data: { json: "*" },
-      cond
-    });
+    const data = typeof courseId === "string" ? (await loadCourseContent(courseId)).contentData : await tncProtectedRequest("fe", { json: "*" }, { sch: "t_ch", cond: {}, limit: 1e3 });
     if (!Array.isArray(data)) {
       res.json([]);
       return;
     }
-    const sessions = data.map(parseChapter).filter((s) => s.pdfUrl || s.contentType === "pdf");
+    const sessions = data.map(parseChapter).filter((s) => s.pdfUrl || s.pdfUrls.length > 0 || s.contentType === "pdf");
     sessions.sort((a, b) => {
       if (courseId) {
         const aNo = parseFloat(String(a.serialNo)) || 0;
@@ -64420,23 +65423,16 @@ router2.get("/notes", async (req, res) => {
     const limit = courseId ? sessions.length : Math.min(parseInt(String(limitParam ?? "60")), 200);
     res.json(sessions.slice(0, limit));
   } catch (err) {
+    if (sendTncLoginRequired(res, err)) return;
     logger.error({ err }, "Failed to fetch notes");
     res.status(500).json({ error: "Failed to fetch notes" });
   }
 });
-router2.get("/sessions", async (req, res) => {
+router3.get("/sessions", requireApprovedSiteUser, async (req, res) => {
   try {
     const { courseId, subjectId, limit: limitParam, type, sort, page: pageParam, search } = req.query;
-    const cond = {};
-    if (courseId) cond.co_refid = courseId;
+    const data = typeof courseId === "string" ? (await loadCourseContent(courseId)).contentData : await tncProtectedRequest("fe", { json: "*" }, { sch: "t_ch", cond: {}, limit: 1e3 });
     const requestedSubjectId = typeof subjectId === "string" ? subjectId.trim() : "";
-    const data = await crmQuery({
-      fn: "common_fn",
-      se: "fe",
-      sch: "t_ch",
-      data: { json: "*" },
-      cond
-    });
     if (!Array.isArray(data)) {
       res.json(courseId ? [] : { sessions: [], total: 0 });
       return;
@@ -64450,7 +65446,7 @@ router2.get("/sessions", async (req, res) => {
       );
     }
     if (type === "video") {
-      sessions = sessions.filter((s) => s.contentType === "youtube" || s.videoUrl);
+      sessions = sessions.filter((s) => s.contentType === "youtube" || s.contentType === "firebase" || s.videoUrl);
     } else if (type === "pdf") {
       sessions = sessions.filter((s) => s.contentType === "pdf" || s.pdfUrl);
     }
@@ -64481,31 +65477,27 @@ router2.get("/sessions", async (req, res) => {
     }
     res.json(sessions);
   } catch (err) {
+    if (sendTncLoginRequired(res, err)) return;
     logger.error({ err }, "Failed to fetch sessions");
     res.status(500).json({ error: "Failed to fetch sessions" });
   }
 });
-router2.get("/sessions/:rowId", async (req, res) => {
+router3.get("/sessions/:rowId", requireApprovedSiteUser, async (req, res) => {
   try {
     const { rowId } = req.params;
-    const data = await crmQuery({
-      fn: "common_fn",
-      se: "fe",
-      sch: "t_ch",
-      data: { json: "*" },
-      cond: { row_id: rowId }
-    });
+    const data = await tncProtectedRequest("fe", { json: "*" }, { sch: "t_ch", cond: { "(row_id)": [rowId] } });
     if (!Array.isArray(data) || data.length === 0) {
       res.status(404).json({ error: "Session not found" });
       return;
     }
     res.json(parseChapter(data[0]));
   } catch (err) {
+    if (sendTncLoginRequired(res, err)) return;
     logger.error({ err }, "Failed to fetch session");
     res.status(500).json({ error: "Failed to fetch session" });
   }
 });
-router2.get("/search", async (req, res) => {
+router3.get("/search", requireApprovedSiteUser, async (req, res) => {
   try {
     const q = (req.query.q ?? "").trim().toLowerCase();
     if (!q || q.length < 2) {
@@ -64513,21 +65505,22 @@ router2.get("/search", async (req, res) => {
       return;
     }
     const [coursesData, quizzesData] = await Promise.all([
-      crmQuery({ fn: "common_fn", se: "fe", sch: "t_co", data: { json: "*" }, cond: {} }),
-      crmQuery({ fn: "common_fn", se: "fe", sch: "t_ex", data: { json: "*", qu_refid: "*" }, cond: {} })
+      tncProtectedRequest("fe_co"),
+      tncProtectedRequest("fe_ex")
     ]);
     const courses = Array.isArray(coursesData) ? coursesData.map(parseCourse).filter((c) => String(c.name).toLowerCase().includes(q)).slice(0, 10) : [];
     const quizzes = Array.isArray(quizzesData) ? quizzesData.filter((row) => {
-      const json = row.json ?? {};
+      const json = typeof row.json === "string" ? JSON.parse(row.json) : row.json ?? {};
       return String(json._ex_na ?? "").toLowerCase().includes(q);
     }).map(parseExam).slice(0, 10) : [];
     res.json({ courses, sessions: [], quizzes });
   } catch (err) {
+    if (sendTncLoginRequired(res, err)) return;
     logger.error({ err }, "Search failed");
     res.status(500).json({ error: "Search failed" });
   }
 });
-router2.get("/sliders", async (_req, res) => {
+router3.get("/sliders", async (_req, res) => {
   try {
     const data = await crmQuery({
       fn: "common_fn",
@@ -64542,7 +65535,7 @@ router2.get("/sliders", async (_req, res) => {
     res.status(500).json({ error: "Failed to fetch sliders" });
   }
 });
-router2.post("/auth/login", async (req, res) => {
+router3.post("/auth/login", async (req, res) => {
   try {
     const { mobile, password } = req.body;
     if (!mobile || !password) {
@@ -64560,7 +65553,65 @@ router2.post("/auth/login", async (req, res) => {
     res.status(500).json({ error: "Login failed" });
   }
 });
-router2.post("/auth/register", async (req, res) => {
+router3.get("/tnc/auth/session", async (_req, res) => {
+  try {
+    res.json(await getSharedTncSessionStatus());
+  } catch (err) {
+    logger.error({ err }, "Failed to read shared TNC session");
+    res.status(503).json({ error: "TNC session storage is unavailable" });
+  }
+});
+router3.post("/tnc/auth/login", async (req, res) => {
+  const { mobile, password } = req.body;
+  if (!mobile || !password) {
+    res.status(400).json({ error: "Mobile and password required" });
+    return;
+  }
+  try {
+    await loginSharedTncStudent(mobile, password);
+    invalidateAdminDirectoryCache();
+    res.json({ available: true });
+  } catch (err) {
+    if (err instanceof TncApiError && err.message === "Already Logged In") {
+      res.status(409).json({ error: err.message, code: "TNC_DEVICE_CONFLICT" });
+      return;
+    }
+    if (err instanceof TncApiError && /invalid credentials/i.test(err.message)) {
+      res.status(401).json({ error: "Invalid TNC mobile number or password" });
+      return;
+    }
+    logger.error({ err }, "TNC student login failed");
+    res.status(502).json({ error: err instanceof Error ? err.message : "TNC login failed" });
+  }
+});
+router3.post("/tnc/auth/send-otp", async (req, res) => {
+  const { mobile } = req.body;
+  if (!mobile) {
+    res.status(400).json({ error: "Mobile required" });
+    return;
+  }
+  try {
+    res.json(await tncPublicRequest("se_ot", { mob: mobile }));
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : "Could not send OTP" });
+  }
+});
+router3.post("/tnc/auth/reset-device", async (req, res) => {
+  const { mobile, password, otp } = req.body;
+  if (!mobile || !password || !otp) {
+    res.status(400).json({ error: "Mobile, password, and OTP required" });
+    return;
+  }
+  try {
+    await resetTncDeviceAndLogin(mobile, password, otp);
+    invalidateAdminDirectoryCache();
+    res.json({ available: true });
+  } catch (err) {
+    logger.warn({ err }, "TNC device reset failed");
+    res.status(400).json({ error: err instanceof Error ? err.message : "Could not reset TNC device" });
+  }
+});
+router3.post("/auth/register", async (req, res) => {
   try {
     const { name, mobile, password, email, college, state, city, gender, dob } = req.body;
     if (!name || !mobile || !password) {
@@ -64579,7 +65630,7 @@ router2.post("/auth/register", async (req, res) => {
     res.status(500).json({ error: "Registration failed" });
   }
 });
-router2.get("/purchases/:userId", async (req, res) => {
+router3.get("/purchases/:userId", async (req, res) => {
   try {
     const data = await crmQuery({
       fn: "common_fn",
@@ -64612,7 +65663,7 @@ router2.get("/purchases/:userId", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch purchases" });
   }
 });
-router2.post("/purchases", async (req, res) => {
+router3.post("/purchases", async (req, res) => {
   try {
     const { userId, courseId, courseName, amount, paymentId } = req.body;
     if (!userId || !courseId || !courseName) {
@@ -64646,7 +65697,7 @@ router2.post("/purchases", async (req, res) => {
     res.status(500).json({ error: "Failed to create purchase" });
   }
 });
-router2.post("/admin/login", (req, res) => {
+router3.post("/admin/login", (req, res) => {
   const { password } = req.body;
   if (password !== ADMIN_PASSWORD) {
     res.status(401).json({ error: "Invalid admin password" });
@@ -64654,28 +65705,30 @@ router2.post("/admin/login", (req, res) => {
   }
   res.json({ token: ADMIN_TOKEN, message: "Admin logged in successfully" });
 });
-router2.get("/admin/users", async (req, res) => {
-  if (!requireAdmin(req, res)) return;
+router3.get("/admin/users", async (req, res) => {
+  if (!requireAdmin2(req, res)) return;
   try {
     const search = typeof req.query.search === "string" ? req.query.search.trim().toLowerCase() : "";
     const page = Math.max(1, Number(req.query.page) || 1);
-    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 25));
-    const allUsers = await listAppUsers();
-    const filtered = search ? allUsers.filter((user) => [user.name, user.mobile, user.email, user.college, user.state].some((value) => value?.toLowerCase().includes(search))) : allUsers;
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 50));
+    const { users: allUsers, unavailableSources } = await listAdminDirectoryUsers();
+    const filtered = search ? allUsers.filter((user) => JSON.stringify(user).toLowerCase().includes(search)) : allUsers;
     const start = (page - 1) * limit;
     res.json({
       users: filtered.slice(start, start + limit),
       total: filtered.length,
       page,
       limit,
-      credentials: { revealable: false, reason: "Passwords are stored as one-way hashes and cannot be recovered." }
+      sources: { app: "Registered accounts", telegram: "Telegram users", mobile: "Mobile installs", crm: "CRM users" },
+      unavailableSources,
+      redactedFields: ["passwords", "tokens", "secrets", "credentials", "API keys", "OTPs"]
     });
   } catch (err) {
     logger.error({ err }, "Failed to fetch app students");
     res.status(500).json({ error: "Failed to fetch students" });
   }
 });
-router2.get("/admin/stats", async (_req, res) => {
+router3.get("/admin/stats", async (_req, res) => {
   try {
     const [coursesData, purchasesData, botStats] = await Promise.all([
       crmQuery({ fn: "common_fn", se: "fe", sch: "t_co", data: { json: "*" }, cond: {} }),
@@ -64697,7 +65750,7 @@ router2.get("/admin/stats", async (_req, res) => {
     res.status(500).json({ error: "Failed to fetch admin stats" });
   }
 });
-router2.get("/promo/status", (_req, res) => {
+router3.get("/promo/status", (_req, res) => {
   const now = /* @__PURE__ */ new Date();
   if (promoState.expiresAt && new Date(promoState.expiresAt) < now) {
     promoState.enabled = false;
@@ -64709,7 +65762,7 @@ router2.get("/promo/status", (_req, res) => {
     message: promoState.enabled ? `Promo active \u2014 all content unlocked until ${new Date(promoState.expiresAt).toLocaleDateString("en-IN")}` : "Promotional mode is inactive"
   });
 });
-router2.post("/promo/toggle", (req, res) => {
+router3.post("/promo/toggle", (req, res) => {
   const { enabled, durationDays, adminToken } = req.body;
   if (adminToken !== ADMIN_TOKEN) {
     res.status(401).json({ error: "Unauthorized" });
@@ -64728,7 +65781,7 @@ router2.post("/promo/toggle", (req, res) => {
     message: promoState.enabled ? `Promotional mode enabled for ${durationDays ?? PROMO_EXPIRES_DAYS} days` : "Promotional mode disabled"
   });
 });
-router2.post("/promo/extend", (req, res) => {
+router3.post("/promo/extend", (req, res) => {
   const { durationDays, adminToken } = req.body;
   if (adminToken !== ADMIN_TOKEN) {
     res.status(401).json({ error: "Unauthorized" });
@@ -64747,18 +65800,12 @@ router2.post("/promo/extend", (req, res) => {
     message: `Free period extended by ${durationDays} days \u2014 now active until ${new Date(promoState.expiresAt).toLocaleDateString("en-IN")}`
   });
 });
-router2.get("/quizzes", async (req, res) => {
+router3.get("/quizzes", requireApprovedSiteUser, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = Math.min(parseInt(req.query.limit) || 20, 100);
     const search = (req.query.search ?? "").toLowerCase();
-    const data = await crmQuery({
-      fn: "common_fn",
-      se: "fe",
-      sch: "t_ex",
-      data: { json: "*", qu_refid: "*" },
-      cond: {}
-    });
+    const data = await tncProtectedRequest("fe_ex");
     if (!Array.isArray(data)) {
       res.json({ quizzes: [], total: 0, page, limit });
       return;
@@ -64780,20 +65827,15 @@ router2.get("/quizzes", async (req, res) => {
     const paged = sorted.slice((page - 1) * limit, page * limit);
     res.json({ quizzes: paged.map(parseExam), total, page, limit });
   } catch (err) {
+    if (sendTncLoginRequired(res, err)) return;
     logger.error({ err }, "Failed to fetch quizzes");
     res.status(500).json({ error: "Failed to fetch quizzes" });
   }
 });
-router2.get("/quiz/:examId", async (req, res) => {
+router3.get("/quiz/:examId", requireApprovedSiteUser, async (req, res) => {
   try {
     const { examId } = req.params;
-    const data = await crmQuery({
-      fn: "common_fn",
-      se: "fe",
-      sch: "t_ex",
-      data: { json: "*", qu_refid: "*" },
-      cond: { row_id: examId }
-    });
+    const data = await tncProtectedRequest("fe_ex", { examids: [examId], type: "with_label" });
     if (!Array.isArray(data) || data.length === 0) {
       res.status(404).json({ error: "Quiz not found" });
       return;
@@ -64808,13 +65850,7 @@ router2.get("/quiz/:examId", async (req, res) => {
     }
     const batchResults = await Promise.all(
       batches.map(
-        (ids) => crmQuery({
-          fn: "common_fn",
-          se: "fe",
-          sch: "t_qu",
-          data: { json: "*" },
-          cond: { row_id: ids }
-        })
+        (ids) => tncProtectedRequest("fe", { json: "*" }, { sch: "t_qu", cond: { "(row_id)": ids } })
       )
     );
     const questions = batchResults.flatMap((r) => Array.isArray(r) ? r : []).map(parseQuestion).filter((q) => q.questionText.trim().length > 0);
@@ -64829,11 +65865,12 @@ router2.get("/quiz/:examId", async (req, res) => {
       questions
     });
   } catch (err) {
+    if (sendTncLoginRequired(res, err)) return;
     logger.error({ err }, "Failed to fetch quiz");
     res.status(500).json({ error: "Failed to fetch quiz" });
   }
 });
-router2.get("/firebase-stream/:fsId", async (req, res) => {
+router3.get("/firebase-stream/:fsId", requireApprovedSiteUser, async (req, res) => {
   const fsId = String(req.params.fsId);
   if (!isFirebaseConfigured()) {
     res.status(503).json({
@@ -64864,7 +65901,7 @@ router2.get("/firebase-stream/:fsId", async (req, res) => {
     }
   }
 });
-router2.get("/firebase-video/:fsId", async (req, res) => {
+router3.get("/firebase-video/:fsId", requireApprovedSiteUser, async (req, res) => {
   const fsId = String(req.params.fsId);
   if (!isServiceAccountConfigured()) {
     res.status(503).json({ error: "Requires FIREBASE_SERVICE_ACCOUNT. Use /api/firebase-stream/:fsId for email/password auth." });
@@ -64882,7 +65919,7 @@ router2.get("/firebase-video/:fsId", async (req, res) => {
     res.status(500).json({ error: "Failed to resolve Firebase video" });
   }
 });
-router2.post("/firebase-auth", async (req, res) => {
+router3.post("/firebase-auth", async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
     res.status(400).json({ error: "email and password required" });
@@ -64895,7 +65932,7 @@ router2.post("/firebase-auth", async (req, res) => {
     res.status(401).json({ error: err.message });
   }
 });
-router2.get("/firebase-status", (_req, res) => {
+router3.get("/firebase-status", (_req, res) => {
   res.json({
     configured: isFirebaseConfigured(),
     method: isUserAuthConfigured() ? "email_password" : isServiceAccountConfigured() ? "service_account" : null,
@@ -64907,10 +65944,10 @@ router2.get("/firebase-status", (_req, res) => {
     }
   });
 });
-var proxy_default = router2;
+var proxy_default = router3;
 
 // artifacts/api-server/src/routes/bot.ts
-var import_express3 = __toESM(require_express2(), 1);
+var import_express4 = __toESM(require_express2(), 1);
 init_logger();
 
 // artifacts/api-server/src/lib/bot.ts
@@ -64953,6 +65990,146 @@ function isAdmin(telegramUserId) {
     process.env.TELEGRAM_ADMIN_ID
   ].flatMap((value) => (value ?? "").split(",")).map((value) => value.trim()).filter(Boolean);
   return configuredIds.includes(String(telegramUserId));
+}
+
+// artifacts/api-server/src/lib/site-access-bot.ts
+init_supabase_server();
+function parseDuration(value, defaultHours) {
+  if (value === "permanent") return null;
+  if (value === void 0 && defaultHours !== void 0) return defaultHours;
+  if (!value) return void 0;
+  const hours = Number(value);
+  return Number.isInteger(hours) && hours >= 1 && hours <= 8760 ? hours : void 0;
+}
+function emailDeliveryText(result) {
+  if (result.sent) return "Email sent.";
+  return result.reason === "not_configured" ? "Email not sent: configure RESEND_API_KEY and ACCESS_EMAIL_FROM on the API service." : "Email provider could not deliver the notification.";
+}
+async function findUserByEmail(email) {
+  const { data, error } = await getSupabaseAdmin().from("site_access").select("user_id,email,display_name,status,requested_at,approved_until,denial_reason,blocked_until,blocked_reason,status_before_block").ilike("email", email).maybeSingle();
+  if (error) throw error;
+  return data;
+}
+async function handleSiteAccessCommand(ctx) {
+  if (!isAdmin(ctx.from?.id)) {
+    await ctx.reply("Admin only.");
+    return;
+  }
+  if (!ctx.message || !("text" in ctx.message)) return;
+  const args = ctx.message.text.replace(/^\/access(?:@\w+)?\s*/i, "").trim().split(/\s+/).filter(Boolean);
+  const action = (args[0] ?? "help").toLowerCase();
+  const admin = getSupabaseAdmin();
+  if (["pending", "approved", "denied", "blocked", "all"].includes(action)) {
+    let query = admin.from("site_access").select("email,display_name,status,requested_at,approved_until,blocked_until,denial_reason,blocked_reason").order("requested_at", { ascending: false }).limit(25);
+    if (action !== "all") query = query.eq("status", action);
+    const { data: data2, error: error2 } = await query;
+    if (error2) throw error2;
+    const users = data2 ?? [];
+    if (!users.length) {
+      await ctx.reply(`No ${action} site access requests.`);
+      return;
+    }
+    const lines = users.map((user2) => {
+      const extra = user2.status === "approved" && user2.approved_until ? ` \xB7 until ${new Date(user2.approved_until).toLocaleString()}` : user2.status === "blocked" ? ` \xB7 ${user2.blocked_until ? `until ${new Date(user2.blocked_until).toLocaleString()}` : "permanent"}` : "";
+      return `\u2022 ${user2.display_name || "Student"} <${user2.email}> \xB7 ${user2.status}${extra}`;
+    });
+    await ctx.reply(`Site access \xB7 ${action} (latest ${users.length})
+
+${lines.join("\n")}`);
+    return;
+  }
+  if (action === "help") {
+    await ctx.reply([
+      "Site access commands:",
+      "/access pending|approved|denied|blocked|all",
+      "/access approve <email> [hours|permanent]",
+      "/access deny <email> [reason]",
+      "/access unapprove <email> [reason]",
+      "/access unapprove <email> [reason]",
+      "/access block <email> <hours|permanent> <reason>",
+      "/access unblock <email>"
+    ].join("\n"));
+    return;
+  }
+  const email = args[1]?.toLowerCase();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    await ctx.reply("Provide the user's email address. Use /access for command help.");
+    return;
+  }
+  const user = await findUserByEmail(email);
+  if (!user) {
+    await ctx.reply("No site access request found for that email.");
+    return;
+  }
+  const now = (/* @__PURE__ */ new Date()).toISOString();
+  let decision;
+  let update;
+  let emailInput;
+  if (action === "approve") {
+    const hours = parseDuration(args[2], 720);
+    if (hours === void 0) {
+      await ctx.reply("Use an approval duration from 1 to 8760 hours, or 'permanent'.");
+      return;
+    }
+    decision = "approved";
+    const approvedUntil = hours === null ? null : new Date(Date.now() + hours * 60 * 60 * 1e3).toISOString();
+    update = { status: "approved", approved_until: approvedUntil, denial_reason: null, blocked_until: null, blocked_reason: null, reviewed_at: now, reviewed_by: `telegram:${ctx.from?.id}` };
+    emailInput = { email: user.email, displayName: user.display_name, decision, reason: null, approvedUntil };
+  } else if (action === "deny") {
+    decision = "denied";
+    const reason = args.slice(2).join(" ").trim() || null;
+    update = { status: "denied", approved_until: null, denial_reason: reason, blocked_until: null, blocked_reason: null, reviewed_at: now, reviewed_by: `telegram:${ctx.from?.id}` };
+    emailInput = { email: user.email, displayName: user.display_name, decision, reason };
+  } else if (action === "unapprove") {
+    if (user.status !== "approved") {
+      await ctx.reply("That user is not currently approved.");
+      return;
+    }
+    decision = "unapproved";
+    const reason = args.slice(2).join(" ").trim() || null;
+    update = { status: "pending", approved_until: null, denial_reason: null, reviewed_at: now, reviewed_by: `telegram:${ctx.from?.id}` };
+    emailInput = { email: user.email, displayName: user.display_name, decision, reason };
+  } else if (action === "unapprove") {
+    if (user.status !== "approved") {
+      await ctx.reply("That user is not currently approved.");
+      return;
+    }
+    decision = "unapproved";
+    const reason = args.slice(2).join(" ").trim() || null;
+    update = { status: "pending", approved_until: null, denial_reason: null, reviewed_at: now, reviewed_by: `telegram:${ctx.from?.id}` };
+    emailInput = { email: user.email, displayName: user.display_name, decision, reason };
+  } else if (action === "block") {
+    const hours = parseDuration(args[2]);
+    const reason = args.slice(3).join(" ").trim();
+    if (hours === void 0 || !reason) {
+      await ctx.reply("Usage: /access block <email> <hours|permanent> <reason>");
+      return;
+    }
+    if (user.email.toLowerCase() === "shashanksv2009@gmail.com") {
+      await ctx.reply("The site administrator cannot be blocked.");
+      return;
+    }
+    decision = "blocked";
+    const blockedUntil = hours === null ? null : new Date(Date.now() + hours * 60 * 60 * 1e3).toISOString();
+    update = { status: "blocked", status_before_block: user.status === "blocked" ? user.status_before_block : user.status, blocked_until: blockedUntil, blocked_reason: reason };
+    emailInput = { email: user.email, displayName: user.display_name, decision, reason, blockedUntil };
+  } else if (action === "unblock") {
+    if (user.status !== "blocked") {
+      await ctx.reply("That user is not blocked.");
+      return;
+    }
+    decision = "unblocked";
+    update = { status: user.status_before_block, blocked_until: null, blocked_reason: null };
+    emailInput = { email: user.email, displayName: user.display_name, decision, reason: user.blocked_reason, restoredStatus: user.status_before_block };
+  } else {
+    await ctx.reply("Unknown site access action. Use /access for command help.");
+    return;
+  }
+  const { data, error } = await admin.from("site_access").update(update).eq("user_id", user.user_id).select("status").single();
+  if (error) throw error;
+  const emailResult = await sendAccessDecisionEmail(emailInput);
+  const actionLabel = decision === "approved" ? "approved" : decision === "denied" ? "denied" : decision === "blocked" ? "blocked" : "unblocked";
+  await ctx.reply(`User ${user.email} ${actionLabel}; access status is ${data.status}. ${emailDeliveryText(emailResult)}`);
 }
 
 // artifacts/api-server/src/lib/bot.ts
@@ -65025,7 +66202,8 @@ function initBot() {
   void tgBot.telegram.setMyCommands([
     { command: "start", description: "Open TNC Nursing Classes" },
     { command: "help", description: "Show available commands" },
-    { command: "leaderboard", description: "View study leaderboard" }
+    { command: "leaderboard", description: "View study leaderboard" },
+    { command: "access", description: "Manage website access requests (admin)" }
   ]).catch((err) => logger.warn({ err }, "Failed to register Telegram commands"));
   const appUrl = APP_URL;
   const pendingBroadcasts = /* @__PURE__ */ new Set();
@@ -65058,7 +66236,7 @@ function initBot() {
       }
       logger.info({ admin: ctx.from?.id }, "/admin requested");
       await ctx.reply(
-        "\u{1F6E1}\uFE0F TNC Admin Center\n\n\u{1F4CA} /stats - View total, active, and banned users\n\u{1F465} /users - List recent users\n\u{1F4DA} /admin - Show this admin menu\n\u{1F9FE} /user <telegram_id> - View one user\n\u{1F6AB} /ban <telegram_id> [reason] - Ban a user\n\u2705 /unban <telegram_id> - Unban a user\n\u26D4 /banned - List banned users\n\u{1F3C6} /leaderboard - View study leaderboard\n\u{1F4E3} /broadcast - Send text/media to all users\n\u{1F504} /comeback - Manually send an update message\n\u274C /cancel - Cancel a pending broadcast\n\nUse /help for this command list."
+        "\u{1F6E1}\uFE0F TNC Admin Center\n\n\u{1F4CA} /stats - View total, active, and banned users\n\u{1F465} /users - List recent users\n\u{1F4DA} /admin - Show this admin menu\n\u{1F9FE} /user <telegram_id> - View one user\n\u{1F6AB} /ban <telegram_id> [reason] - Ban a user\n\u2705 /unban <telegram_id> - Unban a user\n\u{1F510} /access pending|approved|denied|blocked|all - View site access requests\n\u{1F510} /access approve|deny|block|unblock <email> ... - Manage site access\n\u26D4 /banned - List banned users\n\u{1F3C6} /leaderboard - View study leaderboard\n\u{1F4E3} /broadcast - Send text/media to all users\n\u{1F504} /comeback - Manually send an update message\n\u274C /cancel - Cancel a pending broadcast\n\nUse /help for this command list."
       );
     } catch (err) {
       logger.error({ err }, "Error in /admin handler");
@@ -65070,12 +66248,20 @@ function initBot() {
   });
   tgBot.help(async (ctx) => {
     const admin = isAdmin(ctx.from?.id);
-    const adminCmds = admin ? "\n\nAdmin Commands:\n/admin, /stats, /users, /user <id>, /ban <id> [reason], /unban <id>, /banned, /leaderboard, /broadcast, /comeback, /cancel" : "";
+    const adminCmds = admin ? "\n\nAdmin Commands:\n/admin, /stats, /users, /user <id>, /ban <id> [reason], /unban <id>, /banned, /leaderboard, /access, /broadcast, /comeback, /cancel" : "";
     await ctx.reply(
       `TNC Nursing Classes Bot
 
 /start - Open the app${adminCmds}`
     );
+  });
+  tgBot.command("access", async (ctx) => {
+    try {
+      await handleSiteAccessCommand(ctx);
+    } catch (err) {
+      logger.error({ err, adminId: ctx.from?.id }, "Site access bot command failed");
+      await ctx.reply("Could not manage site access. Check the database connection and try again.");
+    }
   });
   tgBot.command("comeback", async (ctx) => {
     try {
@@ -65089,8 +66275,13 @@ function initBot() {
         await ctx.reply("\u26A0\uFE0F Database not configured. Please check Supabase connection.");
         return;
       }
-      await sendComeBackOnlineMessage();
-      await ctx.reply("\u2705 Come back online message sent to all active users!");
+      const { claimComebackNotification: claimComebackNotification2 } = await Promise.resolve().then(() => (init_broadcast(), broadcast_exports));
+      if (!await claimComebackNotification2()) {
+        await ctx.reply("A come back online notification was already sent in the last 24 hours.");
+        return;
+      }
+      await ctx.reply("\u2705 Come back online notification queued for active users.");
+      void sendComeBackOnlineMessage();
     } catch (err) {
       logger.error({ err }, "Error in /comeback handler");
       try {
@@ -65139,9 +66330,9 @@ function initBot() {
       `Reason: ${user.bannedReason ?? "\u2014"}`,
       `Study Time: ${Math.round(user.totalStudySeconds / 60)} min`
     ].join("\n");
-    await ctx.reply(`\u{1F9FE} *User Details*
+    await ctx.reply(`User Details
 
-${details}`, { parse_mode: "MarkdownV2" });
+${details}`);
   });
   tgBot.command("users", async (ctx) => {
     try {
@@ -65179,10 +66370,10 @@ ${list}`);
     }
     const ok = await banUser(targetId, reason);
     if (ok) {
-      await ctx.reply(`\u2705 User \`${targetId}\` banned.
-Reason: ${reason}`, { parse_mode: "MarkdownV2" });
+      await ctx.reply(`\u2705 User ${targetId} banned.
+Reason: ${reason}`);
     } else {
-      await ctx.reply(`\u26A0\uFE0F User \`${targetId}\` not found in store. They must open the app first.`, { parse_mode: "MarkdownV2" });
+      await ctx.reply(`\u26A0\uFE0F User ${targetId} not found in store. They must open the app first.`);
     }
   });
   tgBot.command("unban", async (ctx) => {
@@ -65197,9 +66388,9 @@ Reason: ${reason}`, { parse_mode: "MarkdownV2" });
     }
     const ok = await unbanUser(targetId);
     if (ok) {
-      await ctx.reply(`\u2705 User \`${targetId}\` unbanned.`, { parse_mode: "MarkdownV2" });
+      await ctx.reply(`\u2705 User ${targetId} unbanned.`);
     } else {
-      await ctx.reply(`\u26A0\uFE0F User \`${targetId}\` not found in store.`, { parse_mode: "MarkdownV2" });
+      await ctx.reply(`\u26A0\uFE0F User ${targetId} not found in store.`);
     }
   });
   tgBot.command("banned", async (ctx) => {
@@ -65213,12 +66404,12 @@ Reason: ${reason}`, { parse_mode: "MarkdownV2" });
       return;
     }
     const text = banned.map(
-      (u) => `\u2022 ${u.firstName} (@${u.username ?? "\u2014"}) \u2014 \`${u.telegramId}\`
+      (u) => `\u2022 ${u.firstName} (@${u.username ?? "\u2014"}) \u2014 ${u.telegramId}
   Reason: ${u.bannedReason ?? "none"}`
     ).join("\n\n");
-    await ctx.reply(`\u{1F6AB} *Banned Users:*
+    await ctx.reply(`\u{1F6AB} Banned Users:
 
-${text}`, { parse_mode: "MarkdownV2" });
+${text}`);
   });
   tgBot.command("leaderboard", async (ctx) => {
     const { getLeaderboard: getLeaderboard2 } = await Promise.resolve().then(() => (init_study_store(), study_store_exports));
@@ -65440,9 +66631,27 @@ function verifyTelegramInitData(initData, botToken) {
 // artifacts/api-server/src/routes/bot.ts
 init_user_store();
 init_study_store();
-var router3 = (0, import_express3.Router)();
+var router4 = (0, import_express4.Router)();
+var processedWebhookUpdates = /* @__PURE__ */ new Map();
+var webhookUpdateTtlMs = 24 * 60 * 60 * 1e3;
+var maxCachedWebhookUpdates = 1e4;
+function isDuplicateWebhookUpdate(updateId) {
+  const expiredBefore = Date.now() - webhookUpdateTtlMs;
+  for (const [cachedId, processedAt] of processedWebhookUpdates) {
+    if (processedAt > expiredBefore) break;
+    processedWebhookUpdates.delete(cachedId);
+  }
+  if (processedWebhookUpdates.has(updateId)) return true;
+  processedWebhookUpdates.set(updateId, Date.now());
+  while (processedWebhookUpdates.size > maxCachedWebhookUpdates) {
+    const oldestId = processedWebhookUpdates.keys().next().value;
+    if (oldestId === void 0) break;
+    processedWebhookUpdates.delete(oldestId);
+  }
+  return false;
+}
 var ADMIN_TOKEN2 = process.env.ADMIN_TOKEN ?? "";
-function requireAdmin2(req, res) {
+function requireAdmin3(req, res) {
   const token = req.headers["x-admin-token"] ?? req.query.adminToken;
   if (token !== ADMIN_TOKEN2) {
     res.status(401).json({ error: "Unauthorized" });
@@ -65450,23 +66659,33 @@ function requireAdmin2(req, res) {
   }
   return true;
 }
-router3.post("/webhook", async (req, res) => {
+router4.post("/webhook", async (req, res) => {
+  let webhookUpdateId;
   try {
     if (!bot) {
       res.status(503).json({ error: "Bot not initialized" });
       return;
     }
+    const updateId = req.body?.update_id;
+    if (Number.isInteger(updateId)) {
+      webhookUpdateId = updateId;
+      if (isDuplicateWebhookUpdate(updateId)) {
+        res.json({ ok: true, duplicate: true });
+        return;
+      }
+    }
     await bot.handleUpdate(req.body);
     res.json({ ok: true });
   } catch (err) {
+    if (webhookUpdateId !== void 0) processedWebhookUpdates.delete(webhookUpdateId);
     logger.error({ err }, "Bot webhook error");
     res.status(500).json({ error: "Webhook error" });
   }
 });
-router3.get("/webhook", async (_req, res) => {
+router4.get("/webhook", async (_req, res) => {
   res.json({ ok: true, message: "Telegram webhook endpoint (POST only). Use POST to send updates." });
 });
-router3.get("/status", async (_req, res) => {
+router4.get("/status", async (_req, res) => {
   try {
     const botReady = Boolean(bot);
     const webhook = botReady ? await bot.telegram.getWebhookInfo() : null;
@@ -65485,7 +66704,7 @@ router3.get("/status", async (_req, res) => {
     res.status(500).json({ ok: false, error: "Status check failed" });
   }
 });
-router3.post("/register", async (req, res) => {
+router4.post("/register", async (req, res) => {
   try {
     const { telegramId, firstName, lastName, username, initData } = req.body;
     const verified = verifyTelegramInitData(initData, process.env.BOT_TOKEN ?? process.env.TELEGRAM_BOT_TOKEN);
@@ -65525,7 +66744,7 @@ router3.post("/register", async (req, res) => {
     res.status(500).json({ error: "Registration failed" });
   }
 });
-router3.get("/check-ban/:telegramId", async (req, res) => {
+router4.get("/check-ban/:telegramId", async (req, res) => {
   try {
     const telegramId = parseInt(String(req.params.telegramId));
     if (isNaN(telegramId)) {
@@ -65539,8 +66758,8 @@ router3.get("/check-ban/:telegramId", async (req, res) => {
     res.status(500).json({ error: "Check failed" });
   }
 });
-router3.get("/users", async (req, res) => {
-  if (!requireAdmin2(req, res)) return;
+router4.get("/users", async (req, res) => {
+  if (!requireAdmin3(req, res)) return;
   try {
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.min(parseInt(req.query.limit) || 20, 100);
@@ -65551,12 +66770,12 @@ router3.get("/users", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch users" });
   }
 });
-router3.get("/stats", async (req, res) => {
-  if (!requireAdmin2(req, res)) return;
+router4.get("/stats", async (req, res) => {
+  if (!requireAdmin3(req, res)) return;
   res.json(await getStats());
 });
-router3.post("/users/:telegramId/ban", async (req, res) => {
-  if (!requireAdmin2(req, res)) return;
+router4.post("/users/:telegramId/ban", async (req, res) => {
+  if (!requireAdmin3(req, res)) return;
   try {
     const { reason } = req.body;
     const ok = await banUser(
@@ -65573,8 +66792,8 @@ router3.post("/users/:telegramId/ban", async (req, res) => {
     res.status(500).json({ error: "Failed to ban user" });
   }
 });
-router3.post("/users/:telegramId/unban", async (req, res) => {
-  if (!requireAdmin2(req, res)) return;
+router4.post("/users/:telegramId/unban", async (req, res) => {
+  if (!requireAdmin3(req, res)) return;
   try {
     const ok = await unbanUser(String(req.params.telegramId));
     if (ok) {
@@ -65587,7 +66806,7 @@ router3.post("/users/:telegramId/unban", async (req, res) => {
     res.status(500).json({ error: "Failed to unban user" });
   }
 });
-router3.post("/study/heartbeat", async (req, res) => {
+router4.post("/study/heartbeat", async (req, res) => {
   try {
     const { telegramId, visitorId, visitorName, sessionId, seconds } = req.body;
     if (!sessionId || !Number.isFinite(seconds) || !telegramId && (!visitorId || !visitorName)) {
@@ -65596,8 +66815,25 @@ router3.post("/study/heartbeat", async (req, res) => {
     }
     if (telegramId) {
       await recordStudyHeartbeat({ telegramId, sessionId, seconds });
+    } else if (req.header("authorization")?.match(/^Bearer\s+.+$/i)) {
+      const identity = await getSiteIdentity(req);
+      if (!identity) {
+        res.status(401).json({ error: "Sign in with Google to record website study time" });
+        return;
+      }
+      await recordWebsiteStudyHeartbeat({
+        visitorId: `google_${identity.id}`,
+        visitorName: identity.name || identity.email.split("@")[0],
+        avatarUrl: identity.avatarUrl,
+        sessionId,
+        seconds
+      });
     } else {
-      await recordWebsiteStudyHeartbeat({ visitorId, visitorName, sessionId, seconds });
+      if (visitorId.startsWith("google_")) {
+        res.status(401).json({ error: "Google study records require an authenticated account" });
+        return;
+      }
+      await recordWebsiteStudyHeartbeat({ visitorId, visitorName, avatarUrl: null, sessionId, seconds });
     }
     res.json({ success: true });
   } catch (err) {
@@ -65605,20 +66841,21 @@ router3.post("/study/heartbeat", async (req, res) => {
     res.status(500).json({ error: "Failed to record study time" });
   }
 });
-router3.get("/study/leaderboard", async (req, res) => {
+router4.get("/study/leaderboard", async (req, res) => {
   try {
     const requestedLimit = Number.parseInt(String(req.query.limit ?? "20"), 10);
     const limit = Number.isFinite(requestedLimit) ? Math.min(Math.max(requestedLimit, 1), 100) : 20;
-    res.json(await getLeaderboard(limit));
+    const googleOnly = req.query.googleOnly === "true";
+    res.json(await getLeaderboard(limit, { googleOnly }));
   } catch (err) {
     logger.error({ err }, "Failed to fetch study leaderboard");
     res.status(500).json({ error: "Failed to fetch leaderboard" });
   }
 });
-var bot_default = router3;
+var bot_default = router4;
 
 // artifacts/api-server/src/routes/mobile.ts
-var import_express4 = __toESM(require_express2(), 1);
+var import_express5 = __toESM(require_express2(), 1);
 init_logger();
 
 // artifacts/api-server/src/lib/mobile-store.ts
@@ -65714,9 +66951,9 @@ async function setMobileUserBlocked(installId, blocked, reason) {
 }
 
 // artifacts/api-server/src/routes/mobile.ts
-var router4 = (0, import_express4.Router)();
+var router5 = (0, import_express5.Router)();
 var ADMIN_TOKEN3 = process.env.ADMIN_TOKEN ?? "";
-function requireAdmin3(req, res) {
+function requireAdmin4(req, res) {
   const token = req.header("x-admin-token");
   if (!ADMIN_TOKEN3 || token !== ADMIN_TOKEN3) {
     res.status(401).json({ error: "Unauthorized" });
@@ -65728,7 +66965,7 @@ function sendError(res, error, message) {
   logger.error({ err: error }, message);
   res.status(500).json({ error: message, setup: "Apply docs/mobile-app-supabase.sql in Supabase SQL Editor." });
 }
-router4.post("/open", async (req, res) => {
+router5.post("/open", async (req, res) => {
   const { installId, platform, appVersion } = req.body;
   if (!isValidInstallId(installId) || typeof platform !== "string") {
     res.status(400).json({ error: "A valid installId and platform are required" });
@@ -65745,7 +66982,7 @@ router4.post("/open", async (req, res) => {
     sendError(res, error, "Could not record mobile app open");
   }
 });
-router4.post("/register", async (req, res) => {
+router5.post("/register", async (req, res) => {
   const { installId, name, platform } = req.body;
   if (!isValidInstallId(installId) || typeof name !== "string" || !name.trim()) {
     res.status(400).json({ error: "A valid installId and name are required" });
@@ -65762,7 +66999,7 @@ router4.post("/register", async (req, res) => {
     sendError(res, error, "Could not save mobile profile");
   }
 });
-router4.post("/progress", async (req, res) => {
+router5.post("/progress", async (req, res) => {
   const { installId, sessionId, completed } = req.body;
   if (!isValidInstallId(installId) || typeof sessionId !== "string" || !sessionId.trim() || completed !== true) {
     res.status(400).json({ error: "A valid installId, sessionId and completed=true are required" });
@@ -65780,16 +67017,16 @@ router4.post("/progress", async (req, res) => {
     sendError(res, error, "Could not save mobile progress");
   }
 });
-router4.get("/admin/stats", async (req, res) => {
-  if (!requireAdmin3(req, res)) return;
+router5.get("/admin/stats", async (req, res) => {
+  if (!requireAdmin4(req, res)) return;
   try {
     res.json(await getMobileStats());
   } catch (error) {
     sendError(res, error, "Could not load mobile analytics");
   }
 });
-router4.get("/admin/users", async (req, res) => {
-  if (!requireAdmin3(req, res)) return;
+router5.get("/admin/users", async (req, res) => {
+  if (!requireAdmin4(req, res)) return;
   try {
     const users = await listMobileUsers(Number(req.query.limit) || 100);
     res.json({ users: users.map((user) => ({
@@ -65806,8 +67043,8 @@ router4.get("/admin/users", async (req, res) => {
     sendError(res, error, "Could not load mobile users");
   }
 });
-router4.post("/admin/users/:installId/block", async (req, res) => {
-  if (!requireAdmin3(req, res)) return;
+router5.post("/admin/users/:installId/block", async (req, res) => {
+  if (!requireAdmin4(req, res)) return;
   if (!isValidInstallId(req.params.installId)) {
     res.status(400).json({ error: "Invalid install ID" });
     return;
@@ -65820,8 +67057,8 @@ router4.post("/admin/users/:installId/block", async (req, res) => {
     sendError(res, error, "Could not block mobile user");
   }
 });
-router4.post("/admin/users/:installId/unblock", async (req, res) => {
-  if (!requireAdmin3(req, res)) return;
+router5.post("/admin/users/:installId/unblock", async (req, res) => {
+  if (!requireAdmin4(req, res)) return;
   if (!isValidInstallId(req.params.installId)) {
     res.status(400).json({ error: "Invalid install ID" });
     return;
@@ -65833,19 +67070,20 @@ router4.post("/admin/users/:installId/unblock", async (req, res) => {
     sendError(res, error, "Could not unblock mobile user");
   }
 });
-var mobile_default = router4;
+var mobile_default = router5;
 
 // artifacts/api-server/src/routes/index.ts
-var router5 = (0, import_express5.Router)();
-router5.use(health_default);
-router5.use("/bot", bot_default);
-router5.use("/mobile", mobile_default);
-router5.use(proxy_default);
-var routes_default = router5;
+var router6 = (0, import_express6.Router)();
+router6.use(health_default);
+router6.use("/bot", bot_default);
+router6.use("/mobile", mobile_default);
+router6.use(site_access_default);
+router6.use(proxy_default);
+var routes_default = router6;
 
 // artifacts/api-server/src/app.ts
 init_logger();
-var app = (0, import_express6.default)();
+var app = (0, import_express7.default)();
 app.use(
   (0, import_pino_http.default)({
     logger,
@@ -65866,8 +67104,8 @@ app.use(
   })
 );
 app.use((0, import_cors.default)());
-app.use(import_express6.default.json());
-app.use(import_express6.default.urlencoded({ extended: true }));
+app.use(import_express7.default.json());
+app.use(import_express7.default.urlencoded({ extended: true }));
 app.use("/api", async (req, res, next) => {
   const installId = req.header("x-tnc-install-id");
   if (!installId || req.path === "/mobile/open") {
@@ -65893,7 +67131,7 @@ app.use("/api", async (req, res, next) => {
 app.use("/api", routes_default);
 if (process.env.NODE_ENV === "production") {
   const frontendDist = path.resolve(process.cwd(), "artifacts/tnc-web/dist/public");
-  app.use(import_express6.default.static(frontendDist));
+  app.use(import_express7.default.static(frontendDist));
   app.get(/^(?!\/api).*/, (_req, res) => {
     res.sendFile(path.join(frontendDist, "index.html"));
   });
@@ -65921,7 +67159,7 @@ app_default.listen(port, (err) => {
   logger.info({ port }, "Server listening");
   const botInstance = initBot();
   if (botInstance) {
-    const webhookBaseUrl = process.env.BOT_WEBHOOK_URL ?? process.env.PUBLIC_APP_URL ?? "https://courses.tncnursing.site";
+    const webhookBaseUrl = process.env.BOT_WEBHOOK_URL ?? process.env.RENDER_EXTERNAL_URL ?? (process.env.RENDER_EXTERNAL_HOSTNAME ? `https://${process.env.RENDER_EXTERNAL_HOSTNAME}` : void 0) ?? process.env.RENDER_URL ?? (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` : void 0) ?? process.env.PUBLIC_APP_URL ?? "https://courses.tncnursing.site";
     void setupWebhook(`${webhookBaseUrl.replace(/\/$/, "")}/api/bot/webhook`);
   }
 });
