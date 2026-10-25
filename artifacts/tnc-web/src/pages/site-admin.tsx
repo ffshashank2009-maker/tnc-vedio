@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BookOpen, Check, Clock3, LogOut, RefreshCw, Search, Shield, ShieldOff, X } from "lucide-react";
+import { BookOpen, Check, Clock3, LogOut, RefreshCw, Search, Shield, ShieldOff, Users, X } from "lucide-react";
 import { useSiteAuth, type SiteAccessStatus } from "@/components/SiteAuthProvider";
 import { customFetch } from "@/lib/api-client/custom-fetch";
 
@@ -11,6 +11,14 @@ type AdminAccessUser = SiteAccessStatus & {
 
 const FILTERS = ["pending", "approved", "denied", "blocked", "all"] as const;
 type Filter = (typeof FILTERS)[number];
+
+interface SiteAccessStats {
+  total: number;
+  pending: number;
+  approved: number;
+  denied: number;
+  blocked: number;
+}
 
 interface SiteUserActivity {
   watch_history: Record<string, unknown>;
@@ -68,6 +76,7 @@ export default function SiteAdminPage() {
   const { access, signOut } = useSiteAuth();
   const [filter, setFilter] = useState<Filter>("pending");
   const [users, setUsers] = useState<AdminAccessUser[]>([]);
+  const [stats, setStats] = useState<SiteAccessStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -88,8 +97,12 @@ export default function SiteAdminPage() {
     setLoading(true);
     setError("");
     try {
-      const response = await customFetch<{ users: AdminAccessUser[] }>(`/api/admin/site-access?status=${filter}`);
+      const [response, summary] = await Promise.all([
+        customFetch<{ users: AdminAccessUser[] }>(`/api/admin/site-access?status=${filter}`),
+        customFetch<SiteAccessStats>("/api/admin/site-access/stats"),
+      ]);
       setUsers(response.users);
+      setStats(summary);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Could not load access requests.");
     } finally {
@@ -173,6 +186,20 @@ export default function SiteAdminPage() {
           <div><p className="text-xs font-bold uppercase tracking-[0.14em] text-emerald-800">Access management</p><h2 className="mt-1 text-2xl font-black">Google account requests</h2></div>
           <nav className="flex flex-wrap gap-1" aria-label="Filter users by access status">{FILTERS.map((status) => <button key={status} onClick={() => setFilter(status)} className={`border-b-2 px-3 py-2 text-sm font-semibold capitalize ${filter === status ? "border-emerald-800 text-emerald-900" : "border-transparent text-slate-500 hover:text-slate-900"}`}>{status}</button>)}</nav>
         </div>
+        <section className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5" aria-label="User access totals">
+          {([
+            ["Total users", stats?.total, Users, "text-slate-800", "bg-slate-100"],
+            ["Pending", stats?.pending, Clock3, "text-amber-800", "bg-amber-50"],
+            ["Approved", stats?.approved, Check, "text-emerald-800", "bg-emerald-50"],
+            ["Denied", stats?.denied, X, "text-red-800", "bg-red-50"],
+            ["Blocked", stats?.blocked, ShieldOff, "text-slate-700", "bg-slate-200"],
+          ] as const).map(([label, value, Icon, color, background]) => (
+            <div key={label} className="flex items-center gap-3 border border-slate-200 bg-white p-3 sm:p-4">
+              <span className={`flex h-9 w-9 shrink-0 items-center justify-center ${background} ${color}`}><Icon size={17} /></span>
+              <span className="min-w-0"><span className="block text-xl font-black text-slate-900">{value ?? "—"}</span><span className="block truncate text-xs text-slate-500">{label}</span></span>
+            </div>
+          ))}
+        </section>
         <label className="relative mt-5 block max-w-xl">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by Google name or email" aria-label="Search users by name or email" className="w-full border border-slate-300 bg-white py-2.5 pl-10 pr-3 text-sm outline-none focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100" />

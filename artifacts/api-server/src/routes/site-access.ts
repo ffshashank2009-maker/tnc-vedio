@@ -266,6 +266,28 @@ router.get("/site-access/status", async (req: Request, res: Response): Promise<v
   }
 });
 
+router.get("/admin/site-access/stats", async (req: Request, res: Response): Promise<void> => {
+  if (!await requireAdmin(req, res)) return;
+  try {
+    const statuses = ["pending", "approved", "denied", "blocked"] as const;
+    const [totalResult, ...statusResults] = await Promise.all([
+      getSupabaseAdmin().from("site_access").select("user_id", { count: "exact", head: true }),
+      ...statuses.map((status) => getSupabaseAdmin().from("site_access").select("user_id", { count: "exact", head: true }).eq("status", status)),
+    ]);
+    const failed = [totalResult, ...statusResults].find((result) => result.error);
+    if (failed?.error) throw failed.error;
+    res.json({
+      total: totalResult.count ?? 0,
+      pending: statusResults[0].count ?? 0,
+      approved: statusResults[1].count ?? 0,
+      denied: statusResults[2].count ?? 0,
+      blocked: statusResults[3].count ?? 0,
+    });
+  } catch {
+    res.status(500).json({ error: "Could not load site access statistics" });
+  }
+});
+
 router.get("/admin/site-access", async (req: Request, res: Response): Promise<void> => {
   if (!await requireAdmin(req, res)) return;
   const status = typeof req.query.status === "string" ? req.query.status : "all";
