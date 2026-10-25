@@ -360,7 +360,12 @@ router.post("/admin/site-access/:userId/decision", async (req: Request, res: Res
   if (!identity) return;
   const status = req.body?.status;
   const reason = typeof req.body?.reason === "string" ? req.body.reason.trim().slice(0, 1000) : "";
-  const durationHours = req.body?.durationHours;
+  const requestedDuration = req.body?.durationHours;
+  const durationHours = requestedDuration === null
+    ? null
+    : requestedDuration === undefined
+      ? 720
+      : Number(requestedDuration);
   if (status !== "approved" && status !== "denied") {
     res.status(400).json({ error: "Decision must be approved or denied" });
     return;
@@ -370,7 +375,7 @@ router.post("/admin/site-access/:userId/decision", async (req: Request, res: Res
     return;
   }
   try {
-    const approvedUntil = status === "approved" && typeof durationHours === "number"
+    const approvedUntil = status === "approved" && durationHours !== null
       ? new Date(Date.now() + durationHours * 60 * 60 * 1000).toISOString()
       : null;
     const { data, error } = await getSupabaseAdmin().from("site_access")
