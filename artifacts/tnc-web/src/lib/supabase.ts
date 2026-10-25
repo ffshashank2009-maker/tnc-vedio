@@ -32,7 +32,7 @@ export async function getSupabaseClient(): Promise<SupabaseClient | null> {
 
 export async function signInWithGoogle(redirectTo: string): Promise<void> {
   const client = await getSupabaseClient();
-  if (!client) throw new Error("Google sign-in is not configured. Set SUPABASE_URL and SUPABASE_ANON_KEY or SUPABASE_PUBLISHABLE_KEY on the API server.");
+  if (!client) throw new Error("Google sign-in is not configured. Confirm the latest deployment includes the Supabase public key at build time or serves /api/site-auth/config.");
   const { error } = await client.auth.signInWithOAuth({
     provider: "google",
     options: { redirectTo, queryParams: { prompt: "select_account" } },

@@ -9,6 +9,7 @@ export interface SiteAccessStatus {
   displayName: string;
   status: "pending" | "approved" | "denied" | "blocked";
   requestedAt: string;
+  approvedUntil: string | null;
   denialReason: string | null;
   blockedUntil: string | null;
   blockedReason: string | null;
@@ -73,6 +74,17 @@ export function SiteAuthProvider({ children }: { children: ReactNode }) {
       unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    if (access?.status !== "approved" || !access.approvedUntil || !session) return;
+    const remaining = Date.parse(access.approvedUntil) - Date.now();
+    if (remaining <= 0) {
+      void loadAccess(session);
+      return;
+    }
+    const timer = window.setTimeout(() => void loadAccess(session), remaining + 250);
+    return () => window.clearTimeout(timer);
+  }, [access?.approvedUntil, access?.status, session]);
 
   async function refreshAccess(): Promise<void> {
     await loadAccess(session);

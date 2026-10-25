@@ -1,5 +1,6 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
 import { getSupabaseAdmin } from "../lib/supabase-server";
+import { sendAccessDecisionEmail } from "../lib/access-notifications";
 
 const router = Router();
 const ADMIN_EMAIL = "shashanksv2009@gmail.com";
@@ -19,6 +20,7 @@ export interface SiteIdentity {
   id: string;
   email: string;
   name: string;
+  avatarUrl: string | null;
 }
 
 export interface SiteAccessRecord {
@@ -27,6 +29,8 @@ export interface SiteAccessRecord {
   display_name: string;
   status: "pending" | "approved" | "denied" | "blocked";
   requested_at: string;
+  approved_until: string | null;
+  admin_notified_at: string | null;
   reviewed_at: string | null;
   reviewed_by: string | null;
   denial_reason: string | null;
@@ -46,7 +50,19 @@ export async function getSiteIdentity(req: Request): Promise<SiteIdentity | null
   const name = typeof metadata.full_name === "string"
     ? metadata.full_name
     : typeof metadata.name === "string" ? metadata.name : "";
-  return { id: data.user.id, email: data.user.email.toLowerCase(), name };
+  const avatarCandidate = typeof metadata.avatar_url === "string"
+    ? metadata.avatar_url
+    : typeof metadata.picture === "string" ? metadata.picture : "";
+  let avatarUrl: string | null = null;
+  try {
+    const parsed = new URL(avatarCandidate);
+    if (parsed.protocol === "https:" && (parsed.hostname === "googleusercontent.com" || parsed.hostname.endsWith(".googleusercontent.com"))) {
+      avatarUrl = parsed.toString();
+    }
+  } catch {
+    // Ignore malformed profile image URLs from auth metadata.
+  }
+  return { id: data.user.id, email: data.user.email.toLowerCase(), name, avatarUrl };
 }
 
 async function ensureAccessRecord(identity: SiteIdentity): Promise<SiteAccessRecord> {
@@ -92,6 +108,8 @@ async function effectiveAccessRecord(identity: SiteIdentity): Promise<SiteAccess
       display_name: "Admin",
       status: "approved",
       requested_at: new Date().toISOString(),
+      approved_until: null,
+      admin_notified_at: null,
       reviewed_at: null,
       reviewed_by: null,
       denial_reason: null,
@@ -101,7 +119,7 @@ async function effectiveAccessRecord(identity: SiteIdentity): Promise<SiteAccess
     };
   }
 
-  const record = await ensureAccessRecord(identity);
+  let record = await ensureAccessRecord(identity);
   if (record.status === "blocked" && record.blocked_until && Date.parse(record.blocked_until) <= Date.now()) {
     const { data, error } = await getSupabaseAdmin().from("site_access")
       .update({
@@ -113,7 +131,16 @@ async function effectiveAccessRecord(identity: SiteIdentity): Promise<SiteAccess
       .select("*")
       .single();
     if (error) throw error;
-    return data as SiteAccessRecord;
+    record = data as SiteAccessRecord;
+  }
+  if (record.status === "approved" && record.approved_until && Date.parse(record.approved_until) <= Date.now()) {
+    const { data, error } = await getSupabaseAdmin().from("site_access")
+      .update({ status: "pending", approved_until: null })
+      .eq("user_id", identity.id)
+      .select("*")
+      .single();
+    if (error) throw error;
+    record = data as SiteAccessRecord;
   }
   return record;
 }
@@ -170,6 +197,7 @@ router.get("/site-access/status", async (req: Request, res: Response): Promise<v
       displayName: access.display_name,
       status: access.status,
       requestedAt: access.requested_at,
+      approvedUntil: access.approved_until,
       denialReason: access.denial_reason,
       blockedUntil: access.blocked_until,
       blockedReason: access.blocked_reason,
@@ -200,6 +228,7 @@ router.get("/admin/site-access", async (req: Request, res: Response): Promise<vo
       requestedAt: user.requested_at,
       reviewedAt: user.reviewed_at,
       reviewedBy: user.reviewed_by,
+      approvedUntil: user.approved_until,
       denialReason: user.denial_reason,
       blockedUntil: user.blocked_until,
       blockedReason: user.blocked_reason,
@@ -210,19 +239,91 @@ router.get("/admin/site-access", async (req: Request, res: Response): Promise<vo
   }
 });
 
+router.post("/site-access/notify-admin", async (req: Request, res: Response): Promise<void> => {
+  try {
+    const identity = await getSiteIdentity(req);
+    if (!identity) {
+      res.status(401).json({ error: "Sign in with Google first" });
+      return;
+    }
+    const access = await effectiveAccessRecord(identity);
+    if (access.status !== "pending") {
+      res.status(409).json({ error: "Only pending requests can notify the administrator" });
+      return;
+    }
+
+    const botToken = process.env.TELEGRAM_BOT_TOKEN ?? process.env.BOT_TOKEN;
+    const adminIds = [process.env.ADMIN_CHAT_ID, process.env.ADMIN_TELEGRAM_ID, process.env.TELEGRAM_ADMIN_ID]
+      .flatMap((value) => (value ?? "").split(","))
+      .map((value) => value.trim())
+      .filter((value) => /^-?\d+$/.test(value));
+    if (!botToken || adminIds.length === 0) {
+      res.status(503).json({ error: "Telegram admin notifications are not configured" });
+      return;
+    }
+
+    if (access.admin_notified_at && Date.now() - Date.parse(access.admin_notified_at) < 15 * 60 * 1000) {
+      res.status(429).json({ error: "The administrator was notified recently. Please wait before notifying again." });
+      return;
+    }
+
+    const now = new Date().toISOString();
+    const { error: updateError } = await getSupabaseAdmin().from("site_access")
+      .update({ admin_notified_at: now })
+      .eq("user_id", identity.id);
+    if (updateError) throw updateError;
+
+    const text = [
+      "A student is waiting for TNC Nursing site access approval.",
+      `Name: ${identity.name || access.display_name || "Student"}`,
+      `Email: ${identity.email}`,
+    ].join("\n");
+    const delivery = await Promise.all(adminIds.map(async (chatId) => {
+      try {
+        const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chat_id: chatId, text }),
+          signal: AbortSignal.timeout(8_000),
+        });
+        return response.ok;
+      } catch {
+        return false;
+      }
+    }));
+    if (!delivery.some(Boolean)) {
+      await getSupabaseAdmin().from("site_access").update({ admin_notified_at: null }).eq("user_id", identity.id);
+      res.status(502).json({ error: "The Telegram notification could not be delivered" });
+      return;
+    }
+    res.json({ notified: true });
+  } catch {
+    res.status(500).json({ error: "Could not notify the administrator" });
+  }
+});
+
 router.post("/admin/site-access/:userId/decision", async (req: Request, res: Response): Promise<void> => {
   const identity = await requireAdmin(req, res);
   if (!identity) return;
   const status = req.body?.status;
   const reason = typeof req.body?.reason === "string" ? req.body.reason.trim().slice(0, 1000) : "";
+  const durationHours = req.body?.durationHours;
   if (status !== "approved" && status !== "denied") {
     res.status(400).json({ error: "Decision must be approved or denied" });
     return;
   }
+  if (status === "approved" && durationHours !== null && (!Number.isInteger(durationHours) || durationHours < 1 || durationHours > 8760)) {
+    res.status(400).json({ error: "Approval duration must be from 1 to 8760 hours, or null for permanent access" });
+    return;
+  }
   try {
+    const approvedUntil = status === "approved" && typeof durationHours === "number"
+      ? new Date(Date.now() + durationHours * 60 * 60 * 1000).toISOString()
+      : null;
     const { data, error } = await getSupabaseAdmin().from("site_access")
       .update({
         status,
+        approved_until: approvedUntil,
         reviewed_at: new Date().toISOString(),
         reviewed_by: identity.email,
         denial_reason: status === "denied" ? reason || null : null,
@@ -233,7 +334,14 @@ router.post("/admin/site-access/:userId/decision", async (req: Request, res: Res
       .select("*")
       .single();
     if (error) throw error;
-    res.json({ user: data });
+    const email = await sendAccessDecisionEmail({
+      email: data.email,
+      displayName: data.display_name,
+      decision: status,
+      reason: data.denial_reason,
+      approvedUntil,
+    });
+    res.json({ user: data, emailSent: email.sent, emailReason: email.sent ? null : email.reason });
   } catch {
     res.status(500).json({ error: "Could not update the access request" });
   }

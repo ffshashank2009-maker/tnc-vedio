@@ -18,10 +18,14 @@ export default function SiteAdminPage() {
   const [users, setUsers] = useState<AdminAccessUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [reason, setReason] = useState("");
   const [durationHours, setDurationHours] = useState("24");
   const [permanent, setPermanent] = useState(false);
+  const [approvalDurationHours, setApprovalDurationHours] = useState("720");
+  const [permanentApproval, setPermanentApproval] = useState(false);
+  const [selectedAction, setSelectedAction] = useState<"approve" | "block" | null>(null);
   const [busyId, setBusyId] = useState("");
 
   async function refresh() {
@@ -42,12 +46,22 @@ export default function SiteAdminPage() {
   async function updateUser(userId: string, action: "approve" | "deny" | "block" | "unblock") {
     setBusyId(userId);
     setError("");
+    setNotice("");
     try {
       if (action === "approve" || action === "deny") {
-        await customFetch(`/api/admin/site-access/${encodeURIComponent(userId)}/decision`, {
+        const decision = await customFetch<{ emailSent: boolean; emailReason: string | null }>(`/api/admin/site-access/${encodeURIComponent(userId)}/decision`, {
           method: "POST",
-          body: JSON.stringify({ status: action === "approve" ? "approved" : "denied", reason }),
+          body: JSON.stringify({
+            status: action === "approve" ? "approved" : "denied",
+            reason,
+            ...(action === "approve" ? { durationHours: permanentApproval ? null : Number(approvalDurationHours) } : {}),
+          }),
         });
+        setNotice(decision.emailSent
+          ? "Decision saved and email sent to the user."
+          : decision.emailReason === "not_configured"
+            ? "Decision saved, but email is not configured. Set RESEND_API_KEY and ACCESS_EMAIL_FROM on the API service."
+            : "Decision saved, but the email provider could not deliver the notification.");
       } else if (action === "block") {
         if (!reason.trim()) throw new Error("Add a reason before blocking this user.");
         await customFetch(`/api/admin/site-access/${encodeURIComponent(userId)}/block`, {
@@ -59,6 +73,7 @@ export default function SiteAdminPage() {
       }
       setReason("");
       setSelectedId(null);
+      setSelectedAction(null);
       await refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "User access could not be updated.");
@@ -83,18 +98,19 @@ export default function SiteAdminPage() {
           <nav className="flex flex-wrap gap-1" aria-label="Filter users by access status">{FILTERS.map((status) => <button key={status} onClick={() => setFilter(status)} className={`border-b-2 px-3 py-2 text-sm font-semibold capitalize ${filter === status ? "border-emerald-800 text-emerald-900" : "border-transparent text-slate-500 hover:text-slate-900"}`}>{status}</button>)}</nav>
         </div>
         {error && <p className="mt-4 border border-red-200 bg-red-50 p-3 text-sm text-red-800" role="alert">{error}</p>}
+        {notice && <p className="mt-4 border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900" role="status">{notice}</p>}
         {loading ? <p className="py-12 text-center text-sm text-slate-500">Loading access requests...</p> : users.length === 0 ? <p className="py-12 text-center text-sm text-slate-500">No {filter === "all" ? "users" : `${filter} requests`} found.</p> : (
           <div className="mt-5 divide-y divide-slate-200 border-y border-slate-200 bg-white">
             {users.map((user) => <article key={user.userId} className="px-4 py-5 sm:px-6">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
-                <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="break-all font-bold">{user.email}</h3><span className={`px-2 py-1 text-xs font-bold uppercase ${user.status === "approved" ? "bg-emerald-100 text-emerald-800" : user.status === "denied" || user.status === "blocked" ? "bg-red-100 text-red-800" : "bg-amber-100 text-amber-900"}`}>{user.status}</span></div><p className="mt-1 text-xs text-slate-500">Requested {new Date(user.requestedAt).toLocaleString()}</p>{user.denialReason && <p className="mt-2 text-sm text-red-800">Denied: {user.denialReason}</p>}{user.blockedReason && <p className="mt-2 text-sm text-red-800">Block reason: {user.blockedReason}{user.blockedUntil ? ` · Until ${new Date(user.blockedUntil).toLocaleString()}` : " · Permanent"}</p>}</div>
-                <div className="flex flex-wrap gap-2">{user.status !== "approved" && <button disabled={!!busyId} onClick={() => void updateUser(user.userId, "approve")} className="inline-flex items-center gap-1.5 bg-emerald-800 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-900 disabled:opacity-50"><Check size={14} /> Approve</button>}{user.status === "pending" && <button disabled={!!busyId} onClick={() => void updateUser(user.userId, "deny")} className="inline-flex items-center gap-1.5 border border-red-200 px-3 py-2 text-xs font-bold text-red-800 hover:bg-red-50 disabled:opacity-50"><X size={14} /> Deny</button>}{user.status === "blocked" ? <button disabled={!!busyId} onClick={() => void updateUser(user.userId, "unblock")} className="inline-flex items-center gap-1.5 border border-emerald-200 px-3 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-50 disabled:opacity-50"><ShieldOff size={14} /> Unblock</button> : <button disabled={!!busyId} onClick={() => { setSelectedId(selectedId === user.userId ? null : user.userId); setReason(""); }} className="inline-flex items-center gap-1.5 border border-slate-300 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50"><Clock3 size={14} /> Block</button>}</div>
+                <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="break-all font-bold">{user.email}</h3><span className={`px-2 py-1 text-xs font-bold uppercase ${user.status === "approved" ? "bg-emerald-100 text-emerald-800" : user.status === "denied" || user.status === "blocked" ? "bg-red-100 text-red-800" : "bg-amber-100 text-amber-900"}`}>{user.status}</span></div><p className="mt-1 text-xs text-slate-500">Requested {new Date(user.requestedAt).toLocaleString()}</p>{user.status === "approved" && <p className="mt-2 text-xs text-emerald-800">{user.approvedUntil ? `Approved until ${new Date(user.approvedUntil).toLocaleString()}` : "Permanent approval"}</p>}{user.denialReason && <p className="mt-2 text-sm text-red-800">Denied: {user.denialReason}</p>}{user.blockedReason && <p className="mt-2 text-sm text-red-800">Block reason: {user.blockedReason}{user.blockedUntil ? ` · Until ${new Date(user.blockedUntil).toLocaleString()}` : " · Permanent"}</p>}</div>
+                <div className="flex flex-wrap gap-2"><button disabled={!!busyId} onClick={() => { setSelectedId(selectedId === user.userId && selectedAction === "approve" ? null : user.userId); setSelectedAction(selectedId === user.userId && selectedAction === "approve" ? null : "approve"); setReason(""); }} className="inline-flex items-center gap-1.5 bg-emerald-800 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-900 disabled:opacity-50"><Check size={14} /> {user.status === "approved" ? "Set approval period" : "Approve"}</button>{user.status === "pending" && <button disabled={!!busyId} onClick={() => void updateUser(user.userId, "deny")} className="inline-flex items-center gap-1.5 border border-red-200 px-3 py-2 text-xs font-bold text-red-800 hover:bg-red-50 disabled:opacity-50"><X size={14} /> Deny</button>}{user.status === "blocked" ? <button disabled={!!busyId} onClick={() => void updateUser(user.userId, "unblock")} className="inline-flex items-center gap-1.5 border border-emerald-200 px-3 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-50 disabled:opacity-50"><ShieldOff size={14} /> Unblock</button> : <button disabled={!!busyId} onClick={() => { const opening = selectedId !== user.userId || selectedAction !== "block"; setSelectedId(opening ? user.userId : null); setSelectedAction(opening ? "block" : null); setReason(""); }} className="inline-flex items-center gap-1.5 border border-slate-300 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50"><Clock3 size={14} /> Block</button>}</div>
               </div>
-              {selectedId === user.userId && <form onSubmit={(event) => { event.preventDefault(); void updateUser(user.userId, "block"); }} className="mt-4 grid gap-3 border-t border-slate-100 pt-4 sm:grid-cols-[minmax(0,1fr)_10rem_auto_auto] sm:items-end">
-                <label className="text-xs font-semibold text-slate-600">Reason<input required value={reason} onChange={(event) => setReason(event.target.value)} maxLength={1000} className="mt-1 block w-full border border-slate-300 px-3 py-2 text-sm font-normal text-slate-900 outline-none focus:border-emerald-700" /></label>
-                <label className="text-xs font-semibold text-slate-600">Duration (hours)<input type="number" min="1" max="8760" disabled={permanent} value={durationHours} onChange={(event) => setDurationHours(event.target.value)} className="mt-1 block w-full border border-slate-300 px-3 py-2 text-sm font-normal text-slate-900 outline-none focus:border-emerald-700 disabled:bg-slate-100" /></label>
-                <label className="flex items-center gap-2 py-2 text-sm text-slate-700"><input type="checkbox" checked={permanent} onChange={(event) => setPermanent(event.target.checked)} /> Permanent</label>
-                <button type="submit" disabled={!!busyId} className="bg-red-800 px-4 py-2 text-sm font-bold text-white hover:bg-red-900 disabled:opacity-50">Confirm block</button>
+              {selectedId === user.userId && selectedAction && <form onSubmit={(event) => { event.preventDefault(); void updateUser(user.userId, selectedAction); }} className="mt-4 grid gap-3 border-t border-slate-100 pt-4 sm:grid-cols-[minmax(0,1fr)_10rem_auto_auto] sm:items-end">
+                {selectedAction === "block" && <label className="text-xs font-semibold text-slate-600">Reason<input required value={reason} onChange={(event) => setReason(event.target.value)} maxLength={1000} className="mt-1 block w-full border border-slate-300 px-3 py-2 text-sm font-normal text-slate-900 outline-none focus:border-emerald-700" /></label>}
+                <label className="text-xs font-semibold text-slate-600">{selectedAction === "approve" ? "Approval duration (hours)" : "Block duration (hours)"}<input type="number" min="1" max="8760" disabled={selectedAction === "approve" ? permanentApproval : permanent} value={selectedAction === "approve" ? approvalDurationHours : durationHours} onChange={(event) => selectedAction === "approve" ? setApprovalDurationHours(event.target.value) : setDurationHours(event.target.value)} className="mt-1 block w-full border border-slate-300 px-3 py-2 text-sm font-normal text-slate-900 outline-none focus:border-emerald-700 disabled:bg-slate-100" /></label>
+                <label className="flex items-center gap-2 py-2 text-sm text-slate-700"><input type="checkbox" checked={selectedAction === "approve" ? permanentApproval : permanent} onChange={(event) => selectedAction === "approve" ? setPermanentApproval(event.target.checked) : setPermanent(event.target.checked)} /> Permanent</label>
+                <button type="submit" disabled={!!busyId} className={`${selectedAction === "approve" ? "bg-emerald-800 hover:bg-emerald-900" : "bg-red-800 hover:bg-red-900"} px-4 py-2 text-sm font-bold text-white disabled:opacity-50`}>{selectedAction === "approve" ? "Confirm approval" : "Confirm block"}</button>
               </form>}
             </article>)}
           </div>

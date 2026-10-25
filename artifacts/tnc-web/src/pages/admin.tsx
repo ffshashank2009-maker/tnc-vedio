@@ -11,6 +11,7 @@ import { useWinterEffects } from "@/components/WinterEffectsProvider";
 import { useSiteAuth } from "@/components/SiteAuthProvider";
 import SiteAdminPage from "@/pages/site-admin";
 import { signInWithGoogle } from "@/lib/supabase";
+import GoogleMark from "@/components/GoogleMark";
 
 const QUICK_DAYS = [7, 14, 30, 60, 90];
 const BASE = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
@@ -312,8 +313,8 @@ function AdminLogin() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-2xl p-6">
-          <button type="button" onClick={() => void loginWithGoogle()} className="mb-4 flex w-full items-center justify-center gap-3 border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-800 hover:bg-gray-50">
-            <span className="text-lg font-black" aria-hidden="true">G</span>Sign in with Google admin account
+          <button type="button" onClick={() => void loginWithGoogle()} className="mb-4 box-border inline-flex min-h-12 w-full appearance-none items-center justify-center gap-3 rounded-md border border-[#747775] bg-white px-4 py-3 text-sm font-semibold leading-5 text-[#1f1f1f] shadow-sm hover:bg-[#f8faff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2">
+            <GoogleMark />Sign in with Google admin account
           </button>
           <div className="mt-4 text-center">
             <Link href="/" className="text-sm text-gray-400 hover:text-gray-600">Back to site</Link>
