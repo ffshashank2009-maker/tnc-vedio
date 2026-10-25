@@ -59,16 +59,29 @@ function VisitorGreeting() {
   const { session } = useSiteAuth();
   const user = getUser();
   const telegramUser = getTelegramUser();
+  const [animeImageUrl, setAnimeImageUrl] = useState<string | null>(null);
   const metadata = session?.user.user_metadata ?? {};
   const googleName = [metadata.full_name, metadata.name, metadata.given_name].find((value) => typeof value === "string" && value.trim());
   const name = typeof googleName === "string" ? googleName : user?.name || telegramUser?.first_name || "";
-  const profileImage = [metadata.avatar_url, metadata.picture].find((value) => typeof value === "string" && value.startsWith("https://"));
+
+  useEffect(() => {
+    let active = true;
+    fetch("https://api.waifu.im/images?IncludedTags=waifu&IsNsfw=False&PageSize=1", { headers: { Accept: "application/json" } })
+      .then((response) => response.ok ? response.json() as Promise<{ items?: Array<{ url?: string }> }> : null)
+      .then((data) => {
+        const imageUrl = data?.items?.[0]?.url;
+        if (active && imageUrl?.startsWith("https://")) setAnimeImageUrl(imageUrl);
+      })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, []);
+
   if (!name) return null;
 
   return (
     <section className="mx-auto my-5 flex max-w-6xl items-center gap-3 px-4" data-testid="visitor-greeting">
-      {typeof profileImage === "string"
-        ? <img src={profileImage} alt={`${name}'s Google profile`} referrerPolicy="no-referrer" className="h-12 w-12 rounded-full border-2 border-[hsl(var(--secondary))] object-cover" loading="lazy" />
+      {animeImageUrl
+        ? <img src={animeImageUrl} alt="Anime study companion" referrerPolicy="no-referrer" className="h-12 w-12 rounded-full border-2 border-[hsl(var(--secondary))] object-cover" loading="lazy" />
         : <div aria-hidden="true" className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-800">{name.slice(0, 1).toUpperCase()}</div>}
       <div>
         <p className="text-lg font-black text-gray-900">{getGreeting()}, {name}.</p>
