@@ -36,7 +36,7 @@ function isVideo(session: SubjectSession) {
 }
 
 function isPdf(session: SubjectSession) {
-  return session.contentType === "pdf" || Boolean(session.pdfUrl);
+  return !isVideo(session) && (session.contentType === "pdf" || Boolean(session.pdfUrl) || Boolean(session.pdfUrls?.length));
 }
 
 export default function SubjectDetailPage() {
@@ -162,7 +162,7 @@ export default function SubjectDetailPage() {
               const locked = session.isPaid && !isCourseUnlocked;
               const href = pdf && !video ? `/pdf/${session.rowId}` : `/watch/${session.rowId}`;
               const typeLabel = pdf && !video ? "PDF" : session.contentType === "firebase" ? "SECURED VIDEO" : video ? "VIDEO" : "CONTENT";
-              const attachmentUrls = (session.pdfUrls ?? []).slice(video ? 0 : 1);
+              const attachmentUrls = session.pdfUrls ?? [];
               return locked ? (
                 <div key={session.rowId} className="flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 p-4 opacity-70">
                   <Lock size={18} className="shrink-0 text-gray-400" />

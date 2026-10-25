@@ -385,6 +385,12 @@ function parseChapter(row: Record<string, unknown>) {
     if (contentType === "none") contentType = "pdf";
   }
 
+  // Keep the first PDF available even when the same chapter also has video media.
+  // The content type remains video in that case, while E-Notes can still expose the PDF.
+  if (pdfCandidate && !pdfUrl) {
+    pdfUrl = pdfProxyUrl(pdfCandidate);
+  }
+
   // AGGRESSIVE: If no videoUrl but we have a pdfCandidate (even if not valid URL), treat as PDF
   // This handles cases where PDF data exists but isn't a proper URL yet
   const hasPdfData = pdfCandidates.length > 0;
@@ -699,7 +705,7 @@ router.get("/notes", async (req: Request, res: Response): Promise<void> => {
 
     const sessions = (data as Record<string, unknown>[])
       .map(parseChapter)
-      .filter((s) => s.pdfUrl || s.contentType === "pdf");
+      .filter((s) => s.pdfUrl || s.pdfUrls.length > 0 || s.contentType === "pdf");
 
     // Sort by serial number within a course, newest first globally
     sessions.sort((a, b) => {
